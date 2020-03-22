@@ -1,4 +1,5 @@
-physical_dist <- function(x.loc, z.loc){
+#calculates geo distance between *two* points
+geo_dist <- function(x.loc, z.loc){
   x.long <- x.loc[1]
   x.lat <- x.loc[2]
   z.long <- z.loc[1]
@@ -9,16 +10,23 @@ physical_dist <- function(x.loc, z.loc){
   return(tmp * 3959) #distance in miles
 }
 
-calc_dist <- function(pairwise){
-  if(!pairwise){
-    distance <- distHaversine(X.location, Z.location)
+#calculates 1:1 distance
+calc_dist <- function(X.location, Z.location, fun = geo_dist){
+  nr_X <- nrow(X.location)
+  nr_Z <- nrow(Z.location)
+  if(nr_X != nr_Z){
+    stop("X.location and Z.location should have same number of rows")
   } else {
-    distance <- distm(X.location, Z.location, fun = distHaversine)
+    distance <- rep(NA, nr_X)
+    for(i in 1:nr_X){
+      distance[i] <- fun(X.location[i, ], Z.location[i, ])
+    }
   }
   return(distance)
 }
 
-prepare_data <- function(n, wgt = rep(1, n), sim.factor = 1){
+#adds simulated matches to real data
+prep_data <- function(n, wgt = rep(1, n), sim.factor = 1){
   n.fake = round(n * sim.factor)
   real_data <- data.frame(worker_id = 1:n, job_id = 1:n, y = rep(1, n))
   #simulate matches
@@ -28,4 +36,29 @@ prepare_data <- function(n, wgt = rep(1, n), sim.factor = 1){
                           job_id = job_fake_id, y = rep(0, n.fake))
   res <- rbind(real_data, fake_data)
   return(res)
+}
+
+#prepares formula for glm
+prep_form <- function(formula, X.names, Z.names, dist.order = 2){
+  terms_labels <- labels(terms(formula))
+  n <- length(terms_labels)
+  #initialize list
+  new_labels <- vector(mode = "list", length = n)
+  for(i in 1:n){
+    term <- terms_labels[i]
+    #Is this an interaction term?
+    inter_term <- grepl(":", term)
+    if(!inter_term){
+      #this term ends with "_"?
+      #(=take all variables starting with the expression to the left?)
+      n.char <- nchar(term)
+      last_char <- substr(term, n.char, n.char)
+      if(last_char == "_"){
+        new_labels[i] <- f(substr(term, 1, n.char - 1), c(X.names, Z.names))
+      } else {
+
+      }
+    }
+  }
+
 }
