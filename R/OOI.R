@@ -36,14 +36,24 @@ OOI <- function(formula = NULL,
   if(!is.null(X.location)){
     x_loc <- X.location[est_data$worker_id,]
     z_loc <- Z.location[est_data$job_id,]
-    est_data$distance <- calc_dist(x_loc, z_loc, dist.fun)
+    est_data$D <- calc_dist(x_loc, z_loc, dist.fun)
+  }
+  #add high order distance
+  if(dist.order > 1){
+    for(i in 2:dist.order){
+      est_data$tmp <- est_data$D^i
+      colnames(est_data)[names(est_data) == "tmp"] <- paste("D", i, sep = "")
+    }
   }
   #merge with X Z & weights
-  est_data <- cbind(est_data, w = wgt[est_data$job_id],
-                    X[est_data$worker_id,], Z[est_data$job_id,])
+  est_data$w[est_data$y == 1] <- wgt
+  est_data$w[est_data$y == 0] <- mean(wgt) #weights for fake matches
+  est_data <- cbind(est_data, X[est_data$worker_id,], Z[est_data$job_id,])
   #prepare formula for estimation
-  X_names <- colnames(X)
-  Z_names <- colnames(Z)
-  formula <- prep_form(formula, X_names, Z_names, dist.order)
-  return(est_data)
+  var_names <- c(colnames(X), colnames(Z))
+  formula <- prep_form(formula, var_names, dist.order)
+  #estimate logit
+  logit <- glm(as.formula(formula), family = binomial(link='logit'),
+               data = est_data, weights = est_data$w)
+  return(logit)
 }

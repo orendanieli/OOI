@@ -39,26 +39,54 @@ prep_data <- function(n, wgt = rep(1, n), sim.factor = 1){
 }
 
 #prepares formula for glm
-prep_form <- function(formula, X.names, Z.names, dist.order = 2){
+prep_form <- function(formula, var.names, dist.order = 2){
   terms_labels <- labels(terms(formula))
   n <- length(terms_labels)
-  #initialize list
-  new_labels <- vector(mode = "list", length = n)
+  #initialize formula
+  form <- "~ 1"
   for(i in 1:n){
     term <- terms_labels[i]
     #Is this an interaction term?
     inter_term <- grepl(":", term)
     if(!inter_term){
-      #this term ends with "_"?
-      #(=take all variables starting with the expression to the left?)
-      n.char <- nchar(term)
-      last_char <- substr(term, n.char, n.char)
-      if(last_char == "_"){
-        new_labels[i] <- f(substr(term, 1, n.char - 1), c(X.names, Z.names))
-      } else {
-
-      }
+      form <- paste(form, ext_names(term, var.names, dist.order), sep = " + ")
+    } else {
+      #divide to left term & right term
+      point_pos <- gregexpr(pattern = ":", term)[[1]][1]
+      left_vars <- ext_names(substr(term, 1, point_pos - 1),
+                             var.names, dist.order)
+      right_vars <- ext_names(substr(term, point_pos + 1, nchar(term)),
+                              var.names, dist.order)
+      #paste back
+      tmp <- paste0("(", left_vars, ")", ":", "(", right_vars, ")")
+      form <- paste(form, tmp, sep = " + ")
     }
   }
-
+  form <- paste("y", form, sep = " ")
+  return(form)
 }
+
+#extracts original variable names from term
+ext_names <- function(term, var.names, dist.order = 2){
+  #this term ends with "_"?
+  n.char <- nchar(term)
+  last_char <- substr(term, n.char, n.char)
+  if(last_char == "_"){
+    #take all variables starting with the expression to the left
+    term_init <-  substr(term, 1, n.char - 1)
+    names_init <- substr(var.names, 1, n.char - 1)
+    res <- var.names[term_init == names_init]
+    #Is this a distance term?
+  } else if (term == "D"){
+    dist_terms <- rep(NA, dist.order)
+    for(j in 1:dist.order){
+      dist_terms[j] <- ifelse(j == 1, "D", paste("D", j, sep = ""))
+    }
+    res <- dist_terms
+  } else {
+    res <- term
+  }
+  return(paste(res, collapse = " + "))
+}
+
+
