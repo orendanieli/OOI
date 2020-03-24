@@ -35,6 +35,7 @@ prep_data <- function(n, wgt = rep(1, n), sim.factor = 1){
   fake_data <- data.frame(worker_id = worker_fake_id,
                           job_id = job_fake_id, y = rep(0, n.fake))
   res <- rbind(real_data, fake_data)
+  res$y <- as.factor(res$y)
   return(res)
 }
 
@@ -51,12 +52,9 @@ prep_form <- function(formula, var.names, dist.order = 2){
     if(!inter_term){
       form <- paste(form, ext_names(term, var.names, dist.order), sep = " + ")
     } else {
-      #divide to left term & right term
-      point_pos <- gregexpr(pattern = ":", term)[[1]][1]
-      left_vars <- ext_names(substr(term, 1, point_pos - 1),
-                             var.names, dist.order)
-      right_vars <- ext_names(substr(term, point_pos + 1, nchar(term)),
-                              var.names, dist.order)
+      #divide to left vars & right vars
+      left_vars <- ext_names(div_inter(term)$left, var.names, dist.order)
+      right_vars <- ext_names(div_inter(term)$right, var.names, dist.order)
       #paste back
       tmp <- paste0("(", left_vars, ")", ":", "(", right_vars, ")")
       form <- paste(form, tmp, sep = " + ")
@@ -65,6 +63,15 @@ prep_form <- function(formula, var.names, dist.order = 2){
   form <- paste("y", form, sep = " ")
   return(form)
 }
+
+#divides interaction term into left term and right term
+div_inter <- function(inter_term){
+  point_pos <- gregexpr(pattern = ":", inter_term)[[1]][1]
+  res <- list(left = substr(inter_term, 1, point_pos - 1),
+              right = substr(inter_term, point_pos + 1, nchar(inter_term)))
+  return(res)
+}
+
 
 #extracts original variable names from term
 ext_names <- function(term, var.names, dist.order = 2){
@@ -87,6 +94,27 @@ ext_names <- function(term, var.names, dist.order = 2){
     res <- term
   }
   return(paste(res, collapse = " + "))
+}
+
+
+#standardizes coefficients
+standardize <- function(coeffs, dat, wgt){
+  #calculate sd for relevant variables
+  coef_names <- names(coeffs)
+  inter_pos <- grepl(":", coef_names)
+  rel_vars <- coef_names[!inter_pos] #variables without interaction
+  sd <- apply(dat[dat$y == 1, rel_vars], 2,
+              function(x, w = wgt){sqrt(Hmisc::wtd.var(x, w))})
+  coeffs[rel_vars] <- coeffs[rel_vars] * sd
+  #for interaction terms, we need to mulitply by the SD of each variable
+  inter_pos <- which(inter_pos)
+  for(i in inter_pos){
+    term <- names(coeffs[i])
+    var1 <- div_inter(term)$left
+    var2 <- div_inter(term)$right
+    coeffs[i] <- coeffs[i] * sd[var1] * sd[var2]
+  }
+  return(coeffs)
 }
 
 
