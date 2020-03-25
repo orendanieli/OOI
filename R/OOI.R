@@ -36,13 +36,13 @@ OOI <- function(formula = NULL,
   if(!is.null(X.location)){
     x_loc <- X.location[est_data$worker_id,]
     z_loc <- Z.location[est_data$job_id,]
-    est_data$D <- calc_dist(x_loc, z_loc, dist.fun)
+    est_data$d <- calc_dist(x_loc, z_loc, dist.fun)
   }
   #add high order distance
   if(dist.order > 1){
     for(i in 2:dist.order){
       est_data$tmp <- est_data$D^i
-      colnames(est_data)[names(est_data) == "tmp"] <- paste("D", i, sep = "")
+      colnames(est_data)[names(est_data) == "tmp"] <- paste("d", i, sep = "")
     }
   }
   #merge with X Z & weights

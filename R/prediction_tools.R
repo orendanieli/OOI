@@ -1,17 +1,55 @@
+#prepares coeffs for prediction process
 coef_reshape <- function(coeffs){
   coef_names <- names(coeffs)
-  inter_pos <- grepl(":", coef_names)
-  if(any(inter_pos)){
-    left_vars <- lapply(coef_names[inter_pos], function(x){div_inter(x)$left})
-    left_vars <- unlist(left_vars)
-    right_vars <- lapply(coef_names[inter_pos], function(x){div_inter(x)$right})
-    right_vars <- unlist(right_vars)
-    #extract first character
-    fchar_left <- substr(left_vars, 1, 1)
-    fchar_right <- substr(right_vars, 1, 1)
-    xz_pos <- (fchar_right == "x" & fchar_left == "z") |
-              (fchar_right == "z" & fchar_left == "x")
+  inter_coef <- coef_names[grepl(":", coef_names)]
+  if(length(inter_coef) != 0){
+    #prepare coef matrix to calculate X*A*Z
+    #rows are for x, columns for z
+    xz_mat <- prep_matrix(inter_coef, "x", "z", coeffs)
+    #prepare coef matrix to calculate X*A*D
+    #rows are for x, columns for d
+    xd_mat <- prep_matrix(inter_coef, "x", "d", coeffs)
+    #prepare coef matrix to calculate D*A*Z
+    #rows are for d, columns for z
+    dz_mat <- prep_matrix(inter_coef, "d", "z", coeffs)
+  }
+  sim_coef <- coef_names[!grepl(":", coef_names)]
+  fchar <-  substr(sim_coef, 1, 1)
+  z_coef <- coeffs[sim_coef[fchar == "z"]]
+  if (length(z_coef) == 0)
+    z_coef <- NULL
+  d_coef <- coeffs[sim_coef[fchar == "d"]]
+  if (length(d_coef) == 0)
+    d_coef <- NULL
+  return(list(xz_mat = xz_mat, xd_mat = xd_mat, dz_mat = dz_mat,
+              z_coef = z_coef, d_coef = d_coef))
+}
 
-
+#prepares matrix of coefficients for interaction terms
+prep_matrix <- function(inter_coef, term1, term2, coeffs){
+  left_vars <- unlist(lapply(inter_coef, function(x){div_inter(x)$left}))
+  right_vars <- unlist(lapply(inter_coef, function(x){div_inter(x)$right}))
+  #extract first character
+  fchar_left <- substr(left_vars, 1, 1)
+  fchar_right <- substr(right_vars, 1, 1)
+  pos <- (fchar_right == term1 & fchar_left == term2) |
+          (fchar_right == term2 & fchar_left == term1)
+  if(any(pos)){
+    vars1 <- inter_coef[pos & (fchar_left == term1 | fchar_right == term1)]
+    vars2 <- inter_coef[pos & (fchar_left == term2 | fchar_right == term2)]
+    #rows are for term1, columns for term2
+    mat <- matrix(, nrow = length(vars1), ncol = length(vars2),
+                dimnames = list(vars1, vars2))
+    #fill mat with coeffs
+    for(r in 1:nrow(mat)){
+      for(c in 1:ncol(mat)){
+        ind <- (left_vars == vars1[r] & right_vars == vars2[c]) |
+          (left_vars == vars2[r] & right_vars == vars1[c])
+        mat[r, c] <- coeffs[inter_coef[ind]]
+      }
+    }
+    return(mat)
+  } else {
+    return(NULL)
   }
 }

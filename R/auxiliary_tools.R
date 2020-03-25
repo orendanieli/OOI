@@ -84,10 +84,10 @@ ext_names <- function(term, var.names, dist.order = 2){
     names_init <- substr(var.names, 1, n.char - 1)
     res <- var.names[term_init == names_init]
     #Is this a distance term?
-  } else if (term == "D"){
+  } else if (term == "d"){
     dist_terms <- rep(NA, dist.order)
     for(j in 1:dist.order){
-      dist_terms[j] <- ifelse(j == 1, "D", paste("D", j, sep = ""))
+      dist_terms[j] <- ifelse(j == 1, "d", paste("d", j, sep = ""))
     }
     res <- dist_terms
   } else {
