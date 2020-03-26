@@ -32,11 +32,14 @@ prep_matrix <- function(inter_coef, term1, term2, coeffs){
   #extract first character
   fchar_left <- substr(left_vars, 1, 1)
   fchar_right <- substr(right_vars, 1, 1)
+  #position of relevant interactions
   pos <- (fchar_right == term1 & fchar_left == term2) |
           (fchar_right == term2 & fchar_left == term1)
   if(any(pos)){
-    vars1 <- inter_coef[pos & (fchar_left == term1 | fchar_right == term1)]
-    vars2 <- inter_coef[pos & (fchar_left == term2 | fchar_right == term2)]
+    vars1 <- unique(c(left_vars[pos & fchar_left == term1],
+                      right_vars[pos & fchar_right == term1]))
+    vars2 <- unique(c(left_vars[pos & fchar_left == term2],
+                      right_vars[pos & fchar_right == term2]))
     #rows are for term1, columns for term2
     mat <- matrix(, nrow = length(vars1), ncol = length(vars2),
                 dimnames = list(vars1, vars2))
@@ -44,7 +47,7 @@ prep_matrix <- function(inter_coef, term1, term2, coeffs){
     for(r in 1:nrow(mat)){
       for(c in 1:ncol(mat)){
         ind <- (left_vars == vars1[r] & right_vars == vars2[c]) |
-          (left_vars == vars2[r] & right_vars == vars1[c])
+          (left_vars == vars2[c] & right_vars == vars1[r])
         mat[r, c] <- coeffs[inter_coef[ind]]
       }
     }
@@ -52,4 +55,12 @@ prep_matrix <- function(inter_coef, term1, term2, coeffs){
   } else {
     return(NULL)
   }
+}
+
+#calculates ooi for the logit method, by looping over workers district
+#(district is just grouping of X.location). This is nice because d(i,j) is the
+#same for all workers from the same district.
+calc_ooi <- function(coef.mat, X, Z, X.location, Z.location, wgt){
+
+
 }

@@ -38,17 +38,17 @@ OOI <- function(formula = NULL,
     z_loc <- Z.location[est_data$job_id,]
     est_data$d <- calc_dist(x_loc, z_loc, dist.fun)
   }
-  #add high order distance
-  if(dist.order > 1){
-    for(i in 2:dist.order){
-      est_data$tmp <- est_data$D^i
-      colnames(est_data)[names(est_data) == "tmp"] <- paste("d", i, sep = "")
-    }
-  }
   #merge with X Z & weights
   est_data$w[est_data$y == 1] <- wgt
   est_data$w[est_data$y == 0] <- mean(wgt) #weights for fake matches
   est_data <- cbind(est_data, X[est_data$worker_id,], Z[est_data$job_id,])
+  #add high order distance
+  if(dist.order > 1){
+    for(i in 2:dist.order){
+      est_data$tmp <- est_data$d^i
+      colnames(est_data)[names(est_data) == "tmp"] <- paste("d", i, sep = "")
+    }
+  }
   #prepare formula for estimation
   var_names <- c(colnames(X), colnames(Z))
   formula <- prep_form(formula, var_names, dist.order)
@@ -60,7 +60,9 @@ OOI <- function(formula = NULL,
   pseudo_r2 <- round(1 - logit$deviance / logit$null.deviance, 3)
   #calculate standardized coefficients
   stand_coeffs <- standardize(coeffs[-1], est_data, wgt)
-
+  #reshape coefficients (necessary for prediction)
+  coef_matrices <- coef_reshape(coeffs)
+  #predict OOI
   output <- list(coeffs, coeffs_sd, pseudo_r2, stand_coeffs)
   return(output)
 }
