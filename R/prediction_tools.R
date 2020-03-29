@@ -60,7 +60,32 @@ prep_matrix <- function(inter_coef, term1, term2, coeffs){
 #calculates ooi for the logit method, by looping over workers district
 #(district is just grouping of X.location). This is nice because d(i,j) is the
 #same for all workers from the same district.
-calc_ooi <- function(coef.mat, X, Z, X.location, Z.location, wgt){
-
-
+calc_ooi <- function(coef.mat, X, Z, X.location = NULL,
+                     Z.location = NULL, wgt = rep(1, nrow(X))){
+  n <- nrow(X)
+  A <- coef.mat$xz_mat
+  #add row of 0 for Z_cons
+  A <- rbind(A, cons = rep(0, ncol(A)))
+  b <- coef.mat$z_coef
+  Xnames <- rownames(A)
+  Znames <- colnames(A)
+  Zcons_names <- names(b)
+  X <- X[,Xnames]
+  #add column of 1 for Z_cons
+  X <- cbind(X, rep(1, n))
+  Z_cons <- b %*% t(Z[,Zcons_names])
+  AZ <- A %*% t(Z[,Znames])
+  AZ["cons",] <- AZ["cons",] + Z_cons
+  if(is.null(X.location)){
+    #generate fake district table
+    n_dis <- round(n / 50)
+    dis <- cut(1:n, n.dis, labels = as.character(1:n_dis))
+    dis_table <- cbind(worker = 1:n, dis = dis)
+    for(i in 1:n_dis){
+      workers <- dis_table$worker[dis_table$dis == i]
+      chunck <- X[workers,] %*% AZ
+      p <- exp(chunck)
+      p <- t(t(p) * wgt)
+    }
+  }
 }

@@ -43,7 +43,7 @@ OOI <- function(formula = NULL,
   est_data$w[est_data$y == 0] <- mean(wgt) #weights for fake matches
   est_data <- cbind(est_data, X[est_data$worker_id,], Z[est_data$job_id,])
   #add high order distance
-  if(dist.order > 1){
+  if(dist.order > 1 & !is.null(X.location)){
     for(i in 2:dist.order){
       est_data$tmp <- est_data$d^i
       colnames(est_data)[names(est_data) == "tmp"] <- paste("d", i, sep = "")
