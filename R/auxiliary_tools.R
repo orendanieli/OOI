@@ -26,7 +26,9 @@ calc_dist <- function(X.location, Z.location, fun = geo_dist){
 }
 
 #adds simulated matches to real data
-prep_data <- function(n, wgt = rep(1, n), sim.factor = 1){
+prep_data <- function(X, Z, wgt = rep(1, nrow(X)), sim.factor = 1, seed){
+  set.seed(seed)
+  n <- nrow(X)
   n.fake = round(n * sim.factor)
   real_data <- data.frame(worker_id = 1:n, job_id = 1:n, y = rep(1, n))
   #simulate matches
@@ -36,6 +38,10 @@ prep_data <- function(n, wgt = rep(1, n), sim.factor = 1){
                           job_id = job_fake_id, y = rep(0, n.fake))
   res <- rbind(real_data, fake_data)
   res$y <- as.factor(res$y)
+  #merge with X Z & weights
+  res$w[res$y == 1] <- wgt
+  res$w[res$y == 0] <- mean(wgt) #weights for fake matches
+  res <- cbind(res, X[res$worker_id,], Z[res$job_id,])
   return(res)
 }
 

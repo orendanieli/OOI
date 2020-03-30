@@ -62,30 +62,39 @@ prep_matrix <- function(inter_coef, term1, term2, coeffs){
 #same for all workers from the same district.
 calc_ooi <- function(coef.mat, X, Z, X.location = NULL,
                      Z.location = NULL, wgt = rep(1, nrow(X))){
+  #wgt <- wgt / sum(wgt)
   n <- nrow(X)
   A <- coef.mat$xz_mat
-  #add row of 0 for Z_cons
-  A <- rbind(A, cons = rep(0, ncol(A)))
+  one <- rep(1, n) #will be useful later
   b <- coef.mat$z_coef
   Xnames <- rownames(A)
   Znames <- colnames(A)
   Zcons_names <- names(b)
   X <- X[,Xnames]
   #add column of 1 for Z_cons
-  X <- cbind(X, rep(1, n))
+  X <- cbind(X, one)
   Z_cons <- b %*% t(Z[,Zcons_names])
   AZ <- A %*% t(Z[,Znames])
-  AZ["cons",] <- AZ["cons",] + Z_cons
+  AZ <- rbind(AZ, Z_cons)
   if(is.null(X.location)){
     #generate fake district table
-    n_dis <- round(n / 50)
-    dis <- cut(1:n, n.dis, labels = as.character(1:n_dis))
-    dis_table <- cbind(worker = 1:n, dis = dis)
+    n_dis <- max(round(n / 50), 2)
+    dis <- cut(1:n, n_dis, labels = as.character(1:n_dis))
+    dis_table <- cbind.data.frame(worker = 1:n, dis = dis, ooi = rep(NA, n))
     for(i in 1:n_dis){
       workers <- dis_table$worker[dis_table$dis == i]
-      chunck <- X[workers,] %*% AZ
-      p <- exp(chunck)
+      chunk <- X[workers,] %*% AZ
+      chunk <- chunk #- chunk[,1] - 13
+      p <- exp(chunk)
       p <- t(t(p) * wgt)
+      #normalize (sum(p(.,j)) = 1)
+      sum_p <- as.vector(p %*% one)
+      p <- p / sum_p
+      chunk <- chunk - log(sum_p) #chunk is in log units, so its just like dividing
+      #Sum and get index
+      ooi <- -(p * log(p)) %*% one
+      dis_table$ooi[dis_table$dis == i] <- ooi
     }
   }
+  return(dis_table$ooi)
 }
