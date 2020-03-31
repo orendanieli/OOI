@@ -95,6 +95,10 @@ calc_ooi <- function(coef.mat, X, Z, X.location = NULL,
       ooi <- -(p * log(p)) %*% one
       dis_table$ooi[dis_table$dis == i] <- ooi
     }
+  } else {
+    A_dist <- coef.mat$xd_mat
+    Xnames <- row.names(A_dist)
+
   }
   return(dis_table$ooi)
 }
