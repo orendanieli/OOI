@@ -92,13 +92,12 @@ calc_ooi <- function(coef.mat, X, Z, X.location = NULL,
       p <- p / sum_p
       chunk <- chunk - log(sum_p) #chunk is in log units, so its just like dividing
       #Sum and get index
-      ooi <- -(p * log(p)) %*% one
+      ooi <- -(p * chunk) %*% one
       dis_table$ooi[dis_table$dis == i] <- ooi
     }
   } else {
     A_dist <- coef.mat$xd_mat
     Xnames <- row.names(A_dist)
-
   }
   return(dis_table$ooi)
 }

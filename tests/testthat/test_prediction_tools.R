@@ -17,12 +17,12 @@ test_that("coef_reshape returns correct coefficient matrices", {
 
 test_that("calc_ooi returns the same results as predict", {
   n <- 20
-  p <- 4
+  m <- 4
   w <- rexp(n)
-  Xnames <- paste0("x.", 1:p)
-  Znames <- paste0("z.", 1:p)
-  X <- matrix(rnorm(n*p), ncol = p, dimnames = list(NULL, Xnames))
-  Z <- matrix(rnorm(n*p), ncol = p, dimnames = list(NULL, Znames))
+  Xnames <- paste0("x.", 1:m)
+  Znames <- paste0("z.", 1:m)
+  X <- matrix(rnorm(n*m), ncol = m, dimnames = list(NULL, Xnames))
+  Z <- matrix(rnorm(n*m), ncol = m, dimnames = list(NULL, Znames))
   est_data <- prep_data(X, Z, wgt =  w, sim.factor = 4, seed = 4)
   #prepare formula for estimation
   formula <- prep_form(~ x_ * z_ , c(Xnames, Znames))
@@ -35,14 +35,16 @@ test_that("calc_ooi returns the same results as predict", {
   ooi_predict <- c()
   #calc ooi for each worker with predict
   for(i in 1:n){
-    Xi <- matrix(rep(X[i,], n), ncol = p, byrow = T,
+    Xi <- matrix(rep(X[i,], n), ncol = m, byrow = T,
                  dimnames = list(NULL, Xnames))
     df <- cbind.data.frame(Xi, Z)
     f <- predict(logit, newdata = df)
-    f <- exp(f) * w
+    p <- exp(f) * w
     #normalize
-    f <- f / sum(f)
-    ooi_predict <- c(ooi_predict, -sum(f*log(f)))
+    sum_p <- sum(p)
+    p <- p / sum_p
+    f <- f - log(sum_p)
+    ooi_predict <- c(ooi_predict, -sum(p*f))
   }
   expect_true(min(abs(ooi_predict - ooi_package)) < 0.001)
 })
