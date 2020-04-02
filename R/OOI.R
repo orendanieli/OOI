@@ -59,7 +59,7 @@ OOI <- function(formula = NULL,
   #reshape coefficients (necessary for prediction)
   coef_matrices <- coef_reshape(coeffs)
   #predict OOI
-  ooi <- calc_ooi(coef_matrices, X, Z, X.location, Z.location, wgt)
+  ooi <- predict_ooi(coef_matrices, X, Z, X.location, Z.location, wgt)
   output <- list(coeffs = coeffs,
                  coeffs_sd = coeffs_sd,
                  pseudo_r2 = pseudo_r2,

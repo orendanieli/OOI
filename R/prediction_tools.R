@@ -60,44 +60,84 @@ prep_matrix <- function(inter_coef, term1, term2, coeffs){
 #calculates ooi for the logit method, by looping over workers district
 #(district is just grouping of X.location). This is nice because d(i,j) is the
 #same for all workers from the same district.
-calc_ooi <- function(coef.mat, X, Z, X.location = NULL,
+
+#we are trying to predict log(P(Z|X)), by the following formula:
+#log(P(Z|X)) = X1*A1*Z1' + X2*A2*D' + B1*Z2 + B2*D'
+predict_ooi <- function(coef.mat, X, Z, X.location = NULL,
                      Z.location = NULL, wgt = rep(1, nrow(X))){
   #wgt <- wgt / sum(wgt)
   n <- nrow(X)
-  A <- coef.mat$xz_mat
-  one <- rep(1, n) #will be useful later
-  b <- coef.mat$z_coef
-  Xnames <- rownames(A)
-  Znames <- colnames(A)
-  Zcons_names <- names(b)
-  X <- X[,Xnames]
+  A1 <- coef.mat$xz_mat
+  B1 <- coef.mat$z_coef
+  X1 <- X[,rownames(A1)]
+  Z1 <- Z[,colnames(A1)]
+  Z2 <- Z[,names(B1)]
   #add column of 1 for Z_cons
-  X <- cbind(X, one)
-  Z_cons <- b %*% t(Z[,Zcons_names])
-  AZ <- A %*% t(Z[,Znames])
-  AZ <- rbind(AZ, Z_cons)
+  one <- rep(1, n)
+  X1 <- cbind(X1, one)
+  B1_Z2 <- B1 %*% t(Z2)
+  A1_Z1 <- A1 %*% t(Z1)
+  A1_Z1 <- rbind(A1_Z1, cons = B1_Z2)
+  #generate district table
+  dis_table <- gen_dist(X.location, n)
+  districts <- unique(dis_table$dis)
   if(is.null(X.location)){
-    #generate fake district table
-    n_dis <- max(round(n / 50), 2)
-    dis <- cut(1:n, n_dis, labels = as.character(1:n_dis))
-    dis_table <- cbind.data.frame(worker = 1:n, dis = dis, ooi = rep(NA, n))
-    for(i in 1:n_dis){
+    for(i in districts){
       workers <- dis_table$worker[dis_table$dis == i]
-      chunk <- X[workers,] %*% AZ
-      chunk <- chunk #- chunk[,1] - 13
-      p <- exp(chunk)
-      p <- t(t(p) * wgt)
-      #normalize (sum(p(.,j)) = 1)
-      sum_p <- as.vector(p %*% one)
-      p <- p / sum_p
-      chunk <- chunk - log(sum_p) #chunk is in log units, so its just like dividing
-      #Sum and get index
-      ooi <- -(p * chunk) %*% one
-      dis_table$ooi[dis_table$dis == i] <- ooi
+      logp <- X1[workers,] %*% A1_Z1
+      logp <- logp #- logp[,1] - 13
+      dis_table$ooi[dis_table$dis == i] <- calc_ooi(logp, wgt)
     }
   } else {
-    A_dist <- coef.mat$xd_mat
-    Xnames <- row.names(A_dist)
+    A2 <- coef.mat$xd_mat
+    X2 <- X[,row.names(A2)]
+    #combine B2*D' into A2*D'
+    B2 <- coef.mat$d_coef
+    A2 <- rbind(A2, B2)
+    X2 <- cbind(X2, one)
+    X2_A2 <- X2 %*% A2
+    X <- cbind(X1, X2_A2)
   }
   return(dis_table$ooi)
 }
+
+#calculates ooi from predicted log(P(Z|X)).
+#That is, calculates wgt*P(Z|X)*log(P(Z|X)) (the last term is calculated from logit,
+#so no need weight again)
+calc_ooi <- function(logp, wgt){
+  one <- rep(1, length(wgt))
+  p <- exp(logp)
+  p <- t(t(p) * wgt)
+  #normalize (sum(p(.,j)) = 1)
+  sum_p <- as.vector(p %*% one)
+  p <- p / sum_p
+  logp <- logp - log(sum_p)
+  #Sum and get index
+  ooi <- -(p * logp) %*% one
+  return(ooi)
+}
+
+#grouping X.loc and returns district table. if X.loc is missing, generates
+#fake district table.
+gen_dist <- function(X.loc = NULL, n){
+  if(is.null(X.loc)){
+    n_dis <- max(round(n / 50), 2)
+    dis <- cut(1:n, n_dis, labels = as.character(1:n_dis))
+    dis_table <- cbind.data.frame(worker = 1:n, dis = dis, ooi = rep(NA, n))
+  } else {
+    p <- ncol(X.loc)
+    if(p == 1){
+      X.loc <- as.vector(X.loc)
+      dis_table <- cbind.data.frame(worker = 1:n, dis = X.loc, ooi = rep(NA, n))
+    } else {
+      #transform X.loc to list
+      X_loc <- lapply(seq_len(p), function(i){X.loc[,i]})
+      dis <- interaction(X_loc)
+      dis_table <- cbind.data.frame(worker = 1:n, dis = dis, ooi = rep(NA, n))
+    }
+  }
+  return(dis_table)
+}
+
+
+

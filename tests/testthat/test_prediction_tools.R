@@ -31,7 +31,7 @@ test_that("calc_ooi returns the same results as predict", {
                data = est_data, weights = est_data$w)
   coeffs <- logit$coefficients
   coef_matrices <- coef_reshape(coeffs)
-  ooi_package <- calc_ooi(coef_matrices, X, Z, wgt = w)
+  ooi_package <- predict_ooi(coef_matrices, X, Z, wgt = w)
   ooi_predict <- c()
   #calc ooi for each worker with predict
   for(i in 1:n){
