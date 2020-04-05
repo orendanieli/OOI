@@ -6,7 +6,8 @@
 \usage{
 OOI(formula = NULL, X, Z, X.location = NULL, Z.location = NULL,
   wgt = rep(1, nrow(X)), method = "logit", sim.factor = 1,
-  dist.fun = geo_dist, dist.order = 2)
+  dist.fun = geo_dist, dist.order = 2, seed = runif(1, 0,
+  .Machine$integer.max))
 }
 \arguments{
 \item{X}{matrix or data frame with workers characteristics.}

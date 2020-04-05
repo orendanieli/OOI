@@ -11,7 +11,7 @@ geo_dist <- function(x.loc, z.loc){
 }
 
 #calculates 1:1 distance
-calc_dist <- function(X.location, Z.location, fun = geo_dist){
+calc_dist <- function(X.location, Z.location, fun = geo_dist, dist.order = 2){
   nr_X <- nrow(X.location)
   nr_Z <- nrow(Z.location)
   if(nr_X != nr_Z){
@@ -20,6 +20,14 @@ calc_dist <- function(X.location, Z.location, fun = geo_dist){
     distance <- rep(NA, nr_X)
     for(i in 1:nr_X){
       distance[i] <- fun(X.location[i, ], Z.location[i, ])
+    }
+  }
+  distance <- data.frame(d = distance)
+  #add high order distance
+  if(dist.order > 1){
+    for(i in 2:dist.order){
+      distance$tmp <- distance$d^i
+      colnames(distance)[names(distance) == "tmp"] <- paste("d", i, sep = "")
     }
   }
   return(distance)

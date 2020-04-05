@@ -62,9 +62,13 @@ prep_matrix <- function(inter_coef, term1, term2, coeffs){
 #same for all workers from the same district.
 
 #we are trying to predict log(P(Z|X)), by the following formula:
-#log(P(Z|X)) = X1*A1*Z1' + X2*A2*D' + B1*Z2 + B2*D'
-predict_ooi <- function(coef.mat, X, Z, X.location = NULL,
-                     Z.location = NULL, wgt = rep(1, nrow(X))){
+#log(P(Z|X)) = X1*A1*Z1' + X2*A2*D' + B1*Z2 + B2*D' + D*A3*Z3'
+predict_ooi <- function(coef.mat, X, Z,
+                        X.location = NULL,
+                        Z.location = NULL,
+                        wgt = rep(1, nrow(X)),
+                        dist.fun = geo_dist,
+                        dist.order = 2){
   #wgt <- wgt / sum(wgt)
   n <- nrow(X)
   A1 <- coef.mat$xz_mat
@@ -81,12 +85,20 @@ predict_ooi <- function(coef.mat, X, Z, X.location = NULL,
   #generate district table
   dis_table <- gen_dist(X.location, n)
   districts <- unique(dis_table$dis)
+  #create a progressbar object
+  message("Predicting OOI:", "\n")
+  pb <- txtProgressBar(min = 0, max = length(districts),
+                       initial = 0, style = 3)
+  stepi <- 1
   if(is.null(X.location)){
     for(i in districts){
       workers <- dis_table$worker[dis_table$dis == i]
       logp <- X1[workers,] %*% A1_Z1
       logp <- logp #- logp[,1] - 13
       dis_table$ooi[dis_table$dis == i] <- calc_ooi(logp, wgt)
+      #print and update progress
+      setTxtProgressBar(pb,stepi)
+      stepi <- stepi + 1
     }
   } else {
     A2 <- coef.mat$xd_mat
@@ -97,13 +109,27 @@ predict_ooi <- function(coef.mat, X, Z, X.location = NULL,
     X2 <- cbind(X2, one)
     X2_A2 <- X2 %*% A2
     X <- cbind(X1, X2_A2)
+    for(i in districts){
+      workers <- dis_table$worker[dis_table$dis == i]
+      Xi <- X[workers,]
+      X_loc <- unique(X.location[workers,])
+      #replicate X_loc to be compatible with calc_dist
+      X_loc <- matrix(rep(X_loc, n), nrow = n, byrow = T)
+      D <- calc_dist(X_loc, Z.location, dist.fun, dist.order)
+      D <- as.matrix(D)
+      logp <- Xi %*% rbind(A1_Z1, t(D))
+      dis_table$ooi[dis_table$dis == i] <- calc_ooi(logp, wgt)
+      #print and update progress
+      setTxtProgressBar(pb,stepi)
+      stepi <- stepi + 1
+    }
   }
   return(dis_table$ooi)
 }
 
 #calculates ooi from predicted log(P(Z|X)).
 #That is, calculates wgt*P(Z|X)*log(P(Z|X)) (the last term is calculated from logit,
-#so no need weight again)
+#so no need to weight again)
 calc_ooi <- function(logp, wgt){
   one <- rep(1, length(wgt))
   p <- exp(logp)
@@ -126,15 +152,10 @@ gen_dist <- function(X.loc = NULL, n){
     dis_table <- cbind.data.frame(worker = 1:n, dis = dis, ooi = rep(NA, n))
   } else {
     p <- ncol(X.loc)
-    if(p == 1){
-      X.loc <- as.vector(X.loc)
-      dis_table <- cbind.data.frame(worker = 1:n, dis = X.loc, ooi = rep(NA, n))
-    } else {
-      #transform X.loc to list
-      X_loc <- lapply(seq_len(p), function(i){X.loc[,i]})
-      dis <- interaction(X_loc)
-      dis_table <- cbind.data.frame(worker = 1:n, dis = dis, ooi = rep(NA, n))
-    }
+    #transform X.loc to list
+    X_loc <- lapply(seq_len(p), function(i){X.loc[,i]})
+    dis <- interaction(X_loc)
+    dis_table <- cbind.data.frame(worker = 1:n, dis = dis, ooi = rep(NA, n))
   }
   return(dis_table)
 }
