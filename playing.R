@@ -1,4 +1,4 @@
-n = 500
+n = 100
 X <- matrix(rnorm(4 * n), ncol = 4,
             dimnames = list(NULL, c("x.1", "x.2", "x.3", "x.4")))
 Z <- matrix(rnorm(4 * n), ncol = 4,
@@ -18,16 +18,4 @@ y = rnorm(10000)
 x = rexp(10000)
 reg = lm(y ~ x)
 
-a <- 1
-
-A <- function(a){
-  b <- 2
-  do.call("B", c("b", "a"), envir = parent.frame())
-}
-
-B <- function(b){
-  print(a + b)
-}
-
-A(4)
-
+forest = causal_forest(X = X, Y = rnorm(n), W = rbinom(n, 1, 0.5))

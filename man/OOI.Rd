@@ -5,9 +5,9 @@
 \title{Outside Option Index}
 \usage{
 OOI(formula = NULL, X, Z, X.location = NULL, Z.location = NULL,
-  wgt = rep(1, nrow(X)), method = "logit", sim.factor = 1,
-  dist.fun = geo_dist, dist.order = 2, seed = runif(1, 0,
-  .Machine$integer.max))
+  wgt = rep(1, nrow(X)), pred = T, method = "logit",
+  sim.factor = 1, dist.fun = geo_dist, dist.order = 2,
+  seed = runif(1, 0, .Machine$integer.max))
 }
 \arguments{
 \item{formula}{a formula describing the model to be fitted in order to
@@ -15,9 +15,11 @@ estimate P(Z|X). This formula uses a syntax similar to STATA, and so
 "x_" refers to all variables with the prefix "x". Similarly, "d" refers
 to the distance polynomial (see the example below).}
 
-\item{X}{matrix or data frame with workers characteristics.}
+\item{X}{matrix or data frame with workers characteristics. Note that all column names
+should start with "x" (necessary for \code{\link{coef_reshape}}).}
 
-\item{Z}{matrix or data frame with jobs characteristics.}
+\item{Z}{matrix or data frame with jobs characteristics. Note that all column names
+should start with "z" (necessary for \code{\link{coef_reshape}}).}
 
 \item{X.location}{an optional matrix or data frame with location for workers. could be
 geographical location (i.e., geo-coordinates) or any other
@@ -27,6 +29,8 @@ worker and job using 'dist.fun'.}
 \item{Z.location}{same as 'X.location' but for jobs.}
 
 \item{wgt}{an optional vector of weights.}
+
+\item{pred}{logical. If TRUE (default), predicts ooi for the provided data.}
 
 \item{method}{a method for estimating P(Z|X). currently not in use.}
 
@@ -41,5 +45,5 @@ Z.location.}
 \item{seed}{the seed of the random number generator.}
 }
 \description{
-calculates OOI
+calculates the 'outside option index' for workers, using employer-employee data.
 }

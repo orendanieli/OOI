@@ -7,7 +7,9 @@ Authors@R: c(
   person("Oren", "Danieli", role = "aut"))
 Description:
   Calculates the Outside Option Index proposed by Caldwell and Danieli 
-  (2018).
+  (2018). This index uses the cross- sectional concentration of similar workers 
+  across job types to quantify the availability of outside options as a function of 
+  workers’ characteristics (e.g. commuting costs, preferences, and skills.)
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
