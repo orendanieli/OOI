@@ -62,13 +62,13 @@ prep_matrix <- function(inter_coef, term1, term2, coeffs){
 #same for all workers from the same district.
 
 #we are trying to predict log(P(Z|X)), by the following formula:
-#log(P(Z|X)) = X1*A1*Z1' + X2*A2*D' + B1*Z2 + B2*D' + D*A3*Z3'
+#log(P(Z|X)) = X1*A1*Z1' + X2*A2*D' + B1*Z2 + B2*D' + A3 * "Z3*D"
 predict_ooi <- function(coef.mat, X, Z,
                         X.location = NULL,
                         Z.location = NULL,
                         wgt = rep(1, nrow(X)),
                         dist.fun = geo_dist,
-                        dist.order = 2){
+                        dist.order = 2) {
   #wgt <- wgt / sum(wgt)
   n <- nrow(X)
   A1 <- coef.mat$xz_mat
@@ -76,12 +76,13 @@ predict_ooi <- function(coef.mat, X, Z,
   X1 <- X[,rownames(A1)]
   Z1 <- Z[,colnames(A1)]
   Z2 <- Z[,names(B1)]
-  #add column of 1 for Z_cons
+  #add column of 1 (for B1*Z2)
   one <- rep(1, n)
   X1 <- cbind(X1, one)
   B1_Z2 <- B1 %*% t(Z2)
   A1_Z1 <- A1 %*% t(Z1)
-  A1_Z1 <- rbind(A1_Z1, cons = B1_Z2)
+  A1_Z1 <- rbind(A1_Z1, B1_Z2)
+  rownames(A1_Z1)[nrow(A1_Z1)] <- "cons"
   #generate district table
   dis_table <- gen_dist(X.location, n)
   districts <- unique(dis_table$dis)
@@ -101,27 +102,63 @@ predict_ooi <- function(coef.mat, X, Z,
       stepi <- stepi + 1
     }
   } else {
-    A2 <- coef.mat$xd_mat
-    X2 <- X[,row.names(A2)]
-    #combine B2*D' into A2*D'
     B2 <- coef.mat$d_coef
-    A2 <- rbind(A2, B2)
-    X2 <- cbind(X2, one)
-    X2_A2 <- X2 %*% A2
-    X <- cbind(X1, X2_A2)
-    for(i in districts){
-      workers <- dis_table$worker[dis_table$dis == i]
-      Xi <- X[workers,]
-      X_loc <- unique(X.location[workers,])
-      #replicate X_loc to be compatible with calc_dist
-      X_loc <- matrix(rep(X_loc, n), nrow = n, byrow = T)
-      D <- calc_dist(X_loc, Z.location, dist.fun, dist.order)
-      D <- as.matrix(D)
-      logp <- Xi %*% rbind(A1_Z1, t(D))
-      dis_table$ooi[dis_table$dis == i] <- calc_ooi(logp, wgt)
-      #print and update progress
-      setTxtProgressBar(pb,stepi)
-      stepi <- stepi + 1
+    A2 <- coef.mat$xd_mat
+    A3 <- coef.mat$dz_mat
+    are_null <- c(is.null(A2), is.null(A3))
+    if(!are_null[1]){
+      X2 <- X[,row.names(A2)]
+      #combine B2*D' into A2*D'
+      A2 <- rbind(A2, B2)
+      X2 <- cbind(X2, one)
+      X2_A2 <- X2 %*% A2
+      X <- cbind(X1, X2_A2)
+    }
+    if(!are_null[2]){
+      Z3 <- Z[,colnames(A3)]
+    }
+    if(all(!are_null)){
+      for(i in districts){
+        workers <- dis_table$worker[dis_table$dis == i]
+        Xi <- X[workers,]
+        D <- gen_dist_mat(workers, X.location, Z.location, n, dist.fun, dist.order)
+        for(p in 1:dist.order){
+          DpZ3 <- as.vector(D[,p]) * Z3
+          A1_Z1["cons",] <- A1_Z1["cons",] + DpZ3 %*% A3[p,]
+        }
+        logp <- Xi %*% rbind(A1_Z1, t(D))
+        dis_table$ooi[dis_table$dis == i] <- calc_ooi(logp, wgt)
+        #print and update progress
+        setTxtProgressBar(pb,stepi)
+        stepi <- stepi + 1
+      }
+    } else if (!are_null[1]){
+      for(i in districts){
+        workers <- dis_table$worker[dis_table$dis == i]
+        Xi <- X[workers,]
+        D <- gen_dist_mat(workers, X.location, Z.location, n, dist.fun, dist.order)
+        logp <- Xi %*% rbind(A1_Z1, t(D))
+        dis_table$ooi[dis_table$dis == i] <- calc_ooi(logp, wgt)
+        #print and update progress
+        setTxtProgressBar(pb,stepi)
+        stepi <- stepi + 1
+      }
+    } else {
+      for(i in districts){
+        workers <- dis_table$worker[dis_table$dis == i]
+        Xi <- X1[workers,]
+        D <- gen_dist_mat(workers, X.location, Z.location, n, dist.fun, dist.order)
+        for(p in 1:dist.order){
+          DpZ3 <- as.vector(D[,p]) * Z3
+          A1_Z1["cons",] <- A1_Z1["cons",] + DpZ3 %*% A3[p,]
+        }
+        A1_Z1["cons",] <- A1_Z1["cons",] + D %*% B2
+        logp <- Xi %*% A1_Z1
+        dis_table$ooi[dis_table$dis == i] <- calc_ooi(logp, wgt)
+        #print and update progress
+        setTxtProgressBar(pb,stepi)
+        stepi <- stepi + 1
+      }
     }
   }
   return(dis_table$ooi)
@@ -160,5 +197,13 @@ gen_dist <- function(X.loc = NULL, n){
   return(dis_table)
 }
 
-
+#generates distance matrix for workers from the same district
+gen_dist_mat <- function(workers, X.location, Z.location, n,
+                         dist.fun, dist.order){
+  X_loc <- unique(X.location[workers,])
+  #replicate X_loc to be compatible with calc_dist
+  X_loc <- matrix(rep(X_loc, n), nrow = n, byrow = T)
+  D <- calc_dist(X_loc, Z.location, dist.fun, dist.order)
+  D <- as.matrix(D)
+}
 

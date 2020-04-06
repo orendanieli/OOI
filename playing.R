@@ -17,3 +17,17 @@ x2 <- c(2,3,3,1,1,2,1,2,8,6)
 y = rnorm(10000)
 x = rexp(10000)
 reg = lm(y ~ x)
+
+a <- 1
+
+A <- function(a){
+  b <- 2
+  do.call("B", c("b", "a"), envir = parent.frame())
+}
+
+B <- function(b){
+  print(a + b)
+}
+
+A(4)
+

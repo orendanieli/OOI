@@ -2,7 +2,10 @@
 #'
 #' calculates OOI
 #'
-#' @param formula
+#' @param formula a formula describing the model to be fitted in order to
+#'                estimate P(Z|X). This formula uses a syntax similar to STATA, and so
+#'                "x_" refers to all variables with the prefix "x". Similarly, "d" refers
+#'                to the distance polynomial (see the example below).
 #' @param X matrix or data frame with workers characteristics.
 #' @param Z matrix or data frame with jobs characteristics.
 #' @param X.location an optional matrix or data frame with location for workers. could be
@@ -11,10 +14,13 @@
 #'                   worker and job using 'dist.fun'.
 #' @param Z.location same as 'X.location' but for jobs.
 #' @param wgt an optional vector of weights.
-#' @param method
-#' @param sim.factor
-#' @param dist.fun
-#' @param dist.order
+#' @param method a method for estimating P(Z|X). currently not in use.
+#' @param sim.factor a variable that determines how much fake data to simulate
+#'                   (relative to real data).
+#' @param dist.fun a distance function to calculate the distance between X.location and
+#'                 Z.location.
+#' @param dist.order the order of the distance polynomial.
+#' @param seed the seed of the random number generator.
 
 OOI <- function(formula = NULL,
                 X,

@@ -10,6 +10,11 @@ OOI(formula = NULL, X, Z, X.location = NULL, Z.location = NULL,
   .Machine$integer.max))
 }
 \arguments{
+\item{formula}{a formula describing the model to be fitted in order to
+estimate P(Z|X). This formula uses a syntax similar to STATA, and so
+"x_" refers to all variables with the prefix "x". Similarly, "d" refers
+to the distance polynomial (see the example below).}
+
 \item{X}{matrix or data frame with workers characteristics.}
 
 \item{Z}{matrix or data frame with jobs characteristics.}
@@ -22,6 +27,18 @@ worker and job using 'dist.fun'.}
 \item{Z.location}{same as 'X.location' but for jobs.}
 
 \item{wgt}{an optional vector of weights.}
+
+\item{method}{a method for estimating P(Z|X). currently not in use.}
+
+\item{sim.factor}{a variable that determines how much fake data to simulate
+(relative to real data).}
+
+\item{dist.fun}{a distance function to calculate the distance between X.location and
+Z.location.}
+
+\item{dist.order}{the order of the distance polynomial.}
+
+\item{seed}{the seed of the random number generator.}
 }
 \description{
 calculates OOI
