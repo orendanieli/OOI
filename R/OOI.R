@@ -8,7 +8,7 @@
 #'                to the distance polynomial (see the example below).
 #' @param X matrix or data frame with workers characteristics. Note that all column names
 #'          should start with "x" (necessary for \code{\link{coef_reshape}}).
-#' @param Z matrix or data frame with jobs characteristics. Note that all column names
+#' @param Z an optional matrix or data frame with jobs characteristics. Note that all column names
 #'          should start with "z" (necessary for \code{\link{coef_reshape}}).
 #' @param X.location an optional matrix or data frame with location for workers. could be
 #'                   geographical location (i.e., geo-coordinates) or any other
@@ -29,7 +29,7 @@
 
 OOI <- function(formula = NULL,
                 X,
-                Z,
+                Z = NULL,
                 X.location = NULL,
                 Z.location = NULL,
                 wgt = rep(1, nrow(X)),

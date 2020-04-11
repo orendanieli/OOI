@@ -62,8 +62,9 @@ prep_matrix <- function(inter_coef, term1, term2, coeffs){
 #same for all workers from the same district.
 
 #we are trying to predict log(P(Z|X)), by the following formula:
-#log(P(Z|X)) = X1*A1*Z1' + X2*A2*D' + B1*Z2 + B2*D' + A3 * "Z3*D"
-predict_ooi <- function(coef.mat, X, Z,
+#log(P(Z|X)) = X1*A1*Z1' + X2*A2*D' + B1*Z2 + B2*D' + A3*"Z3*D"
+predict_ooi <- function(coef.mat, X,
+                        Z = NULL,
                         X.location = NULL,
                         Z.location = NULL,
                         wgt = rep(1, nrow(X)),
@@ -71,17 +72,22 @@ predict_ooi <- function(coef.mat, X, Z,
                         dist.order = 2) {
   #wgt <- wgt / sum(wgt)
   n <- nrow(X)
-  A1 <- coef.mat$xz_mat
-  B1 <- coef.mat$z_coef
-  X1 <- X[,rownames(A1)]
-  Z1 <- Z[,colnames(A1)]
-  Z2 <- Z[,names(B1)]
-  #add column of 1 (for B1*Z2)
   one <- rep(1, n)
-  X1 <- cbind(X1, one)
-  B1_Z2 <- B1 %*% t(Z2)
-  A1_Z1 <- A1 %*% t(Z1)
-  A1_Z1 <- rbind(A1_Z1, B1_Z2)
+  A1 <- coef.mat$xz_mat
+  if(is.null(A1)){
+    X1 <- matrix(rep(0, n), ncol = 1)
+    A1_Z1 <- matrix(rep(0, n), nrow = 1)
+  } else {
+    B1 <- coef.mat$z_coef
+    X1 <- X[,rownames(A1)]
+    Z1 <- Z[,colnames(A1)]
+    Z2 <- Z[,names(B1)]
+    #add column of 1 (for B1*Z2)
+    X1 <- cbind(X1, one)
+    B1_Z2 <- B1 %*% t(Z2)
+    A1_Z1 <- A1 %*% t(Z1)
+    A1_Z1 <- rbind(A1_Z1, B1_Z2)
+  }
   rownames(A1_Z1)[nrow(A1_Z1)] <- "cons"
   #generate district table
   dis_table <- gen_dist(X.location, n)
