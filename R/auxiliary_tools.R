@@ -51,9 +51,9 @@ prep_data <- function(X, Z = NULL, wgt = rep(1, nrow(X)),
   res$w[res$y == 1] <- wgt
   res$w[res$y == 0] <- mean(wgt) #weights for fake matches
   if(is.null(Z)){
-    res <- cbind(res, X[res$worker_id,])
+    res <- cbind(res, X[res$worker_id, , drop = F])
   } else {
-    res <- cbind(res, X[res$worker_id,], Z[res$job_id,])
+    res <- cbind(res, X[res$worker_id, , drop = F], Z[res$job_id, , drop = F])
   }
   return(res)
 }

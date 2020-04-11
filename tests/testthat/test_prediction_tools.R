@@ -100,3 +100,26 @@ test_that("calc_ooi returns the same results as predict (with d*z_)", {
   }
   expect_true(min(abs(ooi_predict - ooi_package)) < 0.001)
 })
+
+test_that("calc_ooi returns the same results as predict (without x_*z_)", {
+  #prepare formula for estimation
+  formula <- prep_form(~ x_ * d, c(Xnames, Znames))
+  #estimate logit
+  logit <- glm(as.formula(formula), family = binomial(link='logit'),
+               data = est_data, weights = est_data$w)
+  coeffs <- logit$coefficients
+  coef_matrices <- coef_reshape(coeffs)
+  ooi_package <- predict_ooi(coef_matrices, X, Z, X_loc, Z_loc, wgt = w)
+  ooi_predict <- c()
+  #calc ooi for each worker with predict
+  for(i in 1:n){
+    Xi <- matrix(rep(X[i,], n), ncol = m, byrow = T,
+                 dimnames = list(NULL, Xnames))
+    X_loc_i <- matrix(rep(X_loc[i,], n), nrow = n, byrow = T)
+    D <- calc_dist(X_loc_i, Z_loc)
+    df <- cbind.data.frame(Xi, Z, D)
+    f <- t(as.matrix(predict(logit, newdata = df)))
+    ooi_predict <- c(ooi_predict, calc_ooi(f, w))
+  }
+  expect_true(min(abs(ooi_predict - ooi_package)) < 0.001)
+})
