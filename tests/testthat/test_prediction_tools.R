@@ -50,6 +50,7 @@ test_that("calc_ooi returns the same results as predict (with x_*d)", {
     D <- calc_dist(X_loc_i, Z_loc)
     df <- cbind.data.frame(Xi, Z, D)
     f <- t(as.matrix(predict(logit, newdata = df)))
+    w <- w / sum(w)
     ooi_predict <- c(ooi_predict, calc_ooi(f, w))
   }
   expect_true(min(abs(ooi_predict - ooi_package)) < 0.001)
@@ -73,6 +74,7 @@ test_that("calc_ooi returns the same results as predict (with x_*d & d*z_)", {
     D <- calc_dist(X_loc_i, Z_loc)
     df <- cbind.data.frame(Xi, Z, D)
     f <- t(as.matrix(predict(logit, newdata = df)))
+    w <- w / sum(w)
     ooi_predict <- c(ooi_predict, calc_ooi(f, w))
   }
   expect_true(min(abs(ooi_predict - ooi_package)) < 0.001)
@@ -96,6 +98,7 @@ test_that("calc_ooi returns the same results as predict (with d*z_)", {
     D <- calc_dist(X_loc_i, Z_loc)
     df <- cbind.data.frame(Xi, Z, D)
     f <- t(as.matrix(predict(logit, newdata = df)))
+    w <- w / sum(w)
     ooi_predict <- c(ooi_predict, calc_ooi(f, w))
   }
   expect_true(min(abs(ooi_predict - ooi_package)) < 0.001)
@@ -119,6 +122,7 @@ test_that("calc_ooi returns the same results as predict (without x_*z_)", {
     D <- calc_dist(X_loc_i, Z_loc)
     df <- cbind.data.frame(Xi, Z, D)
     f <- t(as.matrix(predict(logit, newdata = df)))
+    w <- w / sum(w)
     ooi_predict <- c(ooi_predict, calc_ooi(f, w))
   }
   expect_true(min(abs(ooi_predict - ooi_package)) < 0.001)

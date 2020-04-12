@@ -4,13 +4,13 @@ set.seed(123)
 
 test_that("OOI returns correct output", {
   #simulate data
-  n <- 10000
+  n <- 1000
   men <- rbinom(n, 1, 0.5)
   X_loc <- matrix(runif(n, 0, 100), ncol = 1)
   dist <- rep(NA, n)
   men_inc <- men == 1
-  dist[men_inc] <- rexp(n = sum(men_inc), rate = 2) #distance for men
-  dist[!men_inc] <- rexp(n = sum(!men_inc), rate = 1) #distance for women
+  dist[men_inc] <- rexp(n = sum(men_inc), rate = 1) #distance for men
+  dist[!men_inc] <- rexp(n = sum(!men_inc), rate = 2) #distance for women
   direction <- sample(c(1, -1), size = n, T)
   Z_loc <- matrix(rep(NA, n), ncol = 1)
   Z_loc[men_inc,] <- X_loc[men_inc,] + dist[men_inc] * direction[men_inc]

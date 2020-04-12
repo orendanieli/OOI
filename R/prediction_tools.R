@@ -61,8 +61,9 @@ prep_matrix <- function(inter_coef, term1, term2, coeffs){
 #(district is just grouping of X.location). This is nice because d(i,j) is the
 #same for all workers from the same district.
 
-#we are trying to predict log(P(Z|X)), by the following formula:
-#log(P(Z|X)) = X1*A1*Z1' + X2*A2*D' + B1*Z2 + B2*D' + A3*"Z3*D"
+#we are trying to predict log(P(Z|X) / P(Z)), by the following formula:
+#log(P(Z|X) / P(Z)) = X1*A1*Z1' + X2*A2*D' + B1*Z2 + B2*D' + A3*"Z3*D"
+#and then to calculate the ooi.
 predict_ooi <- function(coef.mat, X,
                         Z = NULL,
                         X.location = NULL,
@@ -70,11 +71,11 @@ predict_ooi <- function(coef.mat, X,
                         wgt = rep(1, nrow(X)),
                         dist.fun = geo_dist,
                         dist.order = 2) {
-  #wgt <- wgt / sum(wgt)
   n <- nrow(X)
   one <- rep(1, n)
   A1 <- coef.mat$xz_mat
   if(is.null(A1)){
+    #initialize with zeros, so they wouldnt affect calculations.
     X1 <- matrix(rep(0, n), ncol = 1)
     A1_Z1 <- matrix(rep(0, n), nrow = 1)
   } else {
@@ -82,7 +83,7 @@ predict_ooi <- function(coef.mat, X,
     X1 <- X[,rownames(A1)]
     Z1 <- Z[,colnames(A1)]
     Z2 <- Z[,names(B1)]
-    #add column of 1 (for B1*Z2)
+    #add column of 1 (later we calculate 1 %*% B1_Z2, and so adding B1_Z2)
     X1 <- cbind(X1, one)
     B1_Z2 <- B1 %*% t(Z2)
     A1_Z1 <- A1 %*% t(Z1)
@@ -101,7 +102,6 @@ predict_ooi <- function(coef.mat, X,
     for(i in districts){
       workers <- dis_table$worker[dis_table$dis == i]
       logp <- X1[workers,] %*% A1_Z1
-      logp <- logp #- logp[,1] - 13
       dis_table$ooi[dis_table$dis == i] <- calc_ooi(logp, wgt)
       #print and update progress
       setTxtProgressBar(pb,stepi)
@@ -112,7 +112,7 @@ predict_ooi <- function(coef.mat, X,
     A2 <- coef.mat$xd_mat
     A3 <- coef.mat$dz_mat
     are_null <- c(is.null(A2), is.null(A3))
-    if(!are_null[1]){
+    if(!are_null[1]){ #we need to calculate X2*A2*D' and B2*D'
       X2 <- X[,row.names(A2)]
       #combine B2*D' into A2*D'
       A2 <- rbind(A2, B2)
@@ -120,7 +120,7 @@ predict_ooi <- function(coef.mat, X,
       X2_A2 <- X2 %*% A2
       X <- cbind(X1, X2_A2)
     }
-    if(!are_null[2]){
+    if(!are_null[2]){ #we need to calculate A3*"Z3*D
       Z3 <- Z[,colnames(A3)]
     }
     if(all(!are_null)){
@@ -170,14 +170,19 @@ predict_ooi <- function(coef.mat, X,
   return(dis_table$ooi)
 }
 
-#calculates ooi from predicted log(P(Z|X)).
-#That is, calculates wgt*P(Z|X)*log(P(Z|X)) (the last term is calculated from logit,
-#so no need to weight again)
+#calculates ooi from predicted log(P(Z|X) / P(Z)).
+#by definition, ooi = P(Z|X) * log(P(Z|X) / P(Z)). so we need to calculate P(Z) and then
+#ooi = P(Z) * exp(log(P(Z|X) / P(Z))) * log(P(Z|X) / P(Z)).
+#P(Z) are just wgt (normalized to sum to 1).
+#the last step is to normalize P(Z|X) to sum to 1.
+
 calc_ooi <- function(logp, wgt){
+  wgt <- wgt / sum(wgt)
   one <- rep(1, length(wgt))
+  logp <- logp # - logp[,1] - 13
   p <- exp(logp)
   p <- t(t(p) * wgt)
-  #normalize (sum(p(.,j)) = 1)
+  #now p is actually P(Z|X), and we to normalize it to sum to 1 for each worker.
   sum_p <- as.vector(p %*% one)
   p <- p / sum_p
   logp <- logp - log(sum_p)

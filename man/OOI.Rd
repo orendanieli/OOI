@@ -4,21 +4,21 @@
 \alias{OOI}
 \title{Outside Option Index}
 \usage{
-OOI(formula = NULL, X, Z, X.location = NULL, Z.location = NULL,
-  wgt = rep(1, nrow(X)), pred = T, method = "logit",
-  sim.factor = 1, dist.fun = geo_dist, dist.order = 2,
-  seed = runif(1, 0, .Machine$integer.max))
+OOI(formula = NULL, X, Z = NULL, X.location = NULL,
+  Z.location = NULL, wgt = rep(1, nrow(X)), pred = T,
+  method = "logit", sim.factor = 1, dist.fun = geo_dist,
+  dist.order = 2, seed = runif(1, 0, .Machine$integer.max))
 }
 \arguments{
 \item{formula}{a formula describing the model to be fitted in order to
-estimate P(Z|X). This formula uses a syntax similar to STATA, and so
+estimate P(Z|X) / P(Z). This formula uses a syntax similar to STATA, and so
 "x_" refers to all variables with the prefix "x". Similarly, "d" refers
 to the distance polynomial (see the example below).}
 
 \item{X}{matrix or data frame with workers characteristics. Note that all column names
 should start with "x" (necessary for \code{\link{coef_reshape}}).}
 
-\item{Z}{matrix or data frame with jobs characteristics. Note that all column names
+\item{Z}{an optional matrix or data frame with jobs characteristics. Note that all column names
 should start with "z" (necessary for \code{\link{coef_reshape}}).}
 
 \item{X.location}{an optional matrix or data frame with location for workers. could be
@@ -32,7 +32,7 @@ worker and job using 'dist.fun'.}
 
 \item{pred}{logical. If TRUE (default), predicts ooi for the provided data.}
 
-\item{method}{a method for estimating P(Z|X). currently not in use.}
+\item{method}{a method for estimating P(Z|X) / P(Z). currently not in use.}
 
 \item{sim.factor}{a variable that determines how much fake data to simulate
 (relative to real data).}
@@ -44,6 +44,19 @@ Z.location.}
 
 \item{seed}{the seed of the random number generator.}
 }
+\value{
+an object of class "ooi". This object is a list containing
+the following components:
+ \item{coeffs}{coefficients from the estimated logit.}
+ \item{coeffs_sd}{coefficients standard deviation.}
+ \item{pseudo_r2}{McFadden's pseudo-R squared for the estimated logit.}
+ \item{standardized_coeffs}{standardized coefficients.}
+ \item{ooi}{the outside option index.}
+ \item{orig_arg}{a list containing the original arguments (necessary
+ for \code{\link{predict.ooi}}).}
+}
 \description{
-calculates the 'outside option index' for workers, using employer-employee data.
+calculates the 'outside option index' (defined as
+\eqn{-\sum P(Z|X) * log(P(Z|X) / P(Z))})
+ for workers, using employer-employee data.
 }

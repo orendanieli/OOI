@@ -12,7 +12,22 @@
 \item{object}{an ooi object.}
 
 \item{new.coef}{new vector of coefficients}
+
+\item{new.X}{new X matrix / data frame.}
+
+\item{new.Z}{new Z matrix / data frame.}
+
+\item{new.X.location}{new X.location matrix / data frame.}
+
+\item{new.Z.location}{new Z.location matrix / data frame.}
+
+\item{new.wgt}{new vector of weights}
+}
+\value{
+if there are no new arguments, returns the original ooi. otherwise,
+returns a vector of ooi calculated using the new arguments.
 }
 \description{
-Predict Outside Option Index
+predicts OOI for new coefficients (for counterfactual analysis)
+ and/or new data.
 }

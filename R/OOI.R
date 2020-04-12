@@ -1,9 +1,11 @@
 #' Outside Option Index
 #'
-#' calculates the 'outside option index' for workers, using employer-employee data.
+#' calculates the 'outside option index' (defined as
+#' \eqn{-\sum P(Z|X) * log(P(Z|X) / P(Z))})
+#'  for workers, using employer-employee data.
 #'
 #' @param formula a formula describing the model to be fitted in order to
-#'                estimate P(Z|X). This formula uses a syntax similar to STATA, and so
+#'                estimate P(Z|X) / P(Z). This formula uses a syntax similar to STATA, and so
 #'                "x_" refers to all variables with the prefix "x". Similarly, "d" refers
 #'                to the distance polynomial (see the example below).
 #' @param X matrix or data frame with workers characteristics. Note that all column names
@@ -17,7 +19,7 @@
 #' @param Z.location same as 'X.location' but for jobs.
 #' @param wgt an optional vector of weights.
 #' @param pred logical. If TRUE (default), predicts ooi for the provided data.
-#' @param method a method for estimating P(Z|X). currently not in use.
+#' @param method a method for estimating P(Z|X) / P(Z). currently not in use.
 #' @param sim.factor a variable that determines how much fake data to simulate
 #'                   (relative to real data).
 #' @param dist.fun a distance function to calculate the distance between X.location and
@@ -25,6 +27,16 @@
 #' @param dist.order the order of the distance polynomial.
 #' @param seed the seed of the random number generator.
 #'
+#' @return an object of class "ooi". This object is a list containing
+#' the following components:
+#'  \item{coeffs}{coefficients from the estimated logit.}
+#'  \item{coeffs_sd}{coefficients standard deviation.}
+#'  \item{pseudo_r2}{McFadden's pseudo-R squared for the estimated logit.}
+#'  \item{standardized_coeffs}{standardized coefficients.}
+#'  \item{ooi}{the outside option index.}
+#'  \item{orig_arg}{a list containing the original arguments (necessary
+#'  for \code{\link{predict.ooi}}).}
+
 #' @export
 
 OOI <- function(formula = NULL,
@@ -90,10 +102,21 @@ OOI <- function(formula = NULL,
 
 #' Predict Outside Option Index
 #'
+#' predicts OOI for new coefficients (for counterfactual analysis)
+#'  and/or new data.
+#'
 #' @param object an ooi object.
 #' @param new.coef new vector of coefficients
+#' @param new.X new X matrix / data frame.
+#' @param new.Z new Z matrix / data frame.
+#' @param new.X.location new X.location matrix / data frame.
+#' @param new.Z.location new Z.location matrix / data frame.
+#' @param new.wgt new vector of weights
 #'
+#' @return if there are no new arguments, returns the original ooi. otherwise,
+#' returns a vector of ooi calculated using the new arguments.
 #' @export
+#add example
 predict.ooi <- function(object,
                         new.coef = NULL,
                         new.X = NULL,
