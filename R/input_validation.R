@@ -1,0 +1,68 @@
+validate_input <- function(formula, X, Z, X.location, Z.location, wgt){
+  if(is.null(Z) & is.null(X.location) & is.null(Z.location)){
+    stop("Z or locations are needed")
+  }
+  if((!is.null(X.location) & is.null(Z.location)) |
+     (is.null(X.location) & !is.null(Z.location))){
+    stop("both Z.location and X.location are needed")
+  }
+  n <- nrow(X)
+  validate_type(Z, "Z", n)
+  validate_type(Z.location, "Z.location", n)
+  validate_type(X.location, "X.location", n)
+  validate_colnames(X, "x")
+  validate_colnames(Z, "z")
+  if(!inherits(wgt, "numeric") | n != length(wgt)){
+    stop(paste("wgt must be numeric,",
+               "with the same number of examples as X."))
+  }
+  #validate formula
+  if(is.null(formula)){
+    if(is.null(Z)){
+      message("formula is missing. default formula (~ x_*d) is used")
+      return(~ x_ * d)
+    } else {
+      if(is.null(X.location)){
+        message("formula is missing. default formula (~ x_*z_) is used")
+        return(~ x_ * z_)
+      } else {
+        message("formula is missing. default formula (~ x_*z_ + x_*d) is used")
+        return(~ x_ * z_ + x_*d)
+      }
+    }
+  } else {
+    terms <- labels(terms(formula))
+    fchar <- substr(terms, 1, 1)
+    if(is.null(X.location)){
+      if(any(fchar == "d"))
+        stop("d appears in the formula but locations are missing")
+    } else {
+      if(!any(fchar == "d"))
+        stop("locations were provided but d doesn't appear in the formula")
+    }
+    return(formula)
+  }
+}
+
+validate_colnames <- function(df, char){
+  if(!is.null(df)){
+    col_names <- colnames(df)
+    fchar <- substr(col_names, 1, 1)
+    if(any(fchar != char) | is.null(col_names)){
+      stop(paste("All column names in",
+                 ifelse(char == "x", "X", "Z"),
+                 "should start with", char))
+    }
+  }
+}
+
+validate_type <- function(df, df.name, exp.length){
+  if(!is.null(df)){
+    if(!inherits(df, c("matrix","data.frame"))){
+      stop(paste(df.name, "should be either matrix or data.frame"))
+    }
+    if(nrow(df) != exp.length){
+      stop(paste("X and", df.name, "don't have the same number of rows"))
+    }
+  }
+}
