@@ -2,17 +2,16 @@
 coef_reshape <- function(coeffs){
   coef_names <- names(coeffs)
   inter_coef <- coef_names[grepl(":", coef_names)]
-  if(length(inter_coef) != 0){
-    #prepare coef matrix to calculate X*A*Z
-    #rows are for x, columns for z
-    xz_mat <- prep_matrix(inter_coef, "x", "z", coeffs)
-    #prepare coef matrix to calculate X*A*D
-    #rows are for x, columns for d
-    xd_mat <- prep_matrix(inter_coef, "x", "d", coeffs)
-    #prepare coef matrix to calculate D*A*Z
-    #rows are for d, columns for z
-    dz_mat <- prep_matrix(inter_coef, "d", "z", coeffs)
-  }
+  #prepare coef matrix to calculate X*A*Z
+  #rows are for x, columns for z
+  xz_mat <- prep_matrix(inter_coef, "x", "z", coeffs)
+  #prepare coef matrix to calculate X*A*D
+  #rows are for x, columns for d
+  xd_mat <- prep_matrix(inter_coef, "x", "d", coeffs)
+  #prepare coef matrix to calculate D*A*Z
+  #rows are for d, columns for z
+  dz_mat <- prep_matrix(inter_coef, "d", "z", coeffs)
+  #simple terms
   sim_coef <- coef_names[!grepl(":", coef_names)]
   fchar <-  substr(sim_coef, 1, 1)
   z_coef <- coeffs[sim_coef[fchar == "z"]]
@@ -79,17 +78,19 @@ predict_ooi <- function(coef.mat, X,
     X1 <- matrix(rep(0, n), ncol = 1)
     A1_Z1 <- matrix(rep(0, n), nrow = 1)
   } else {
-    B1 <- coef.mat$z_coef
     X1 <- X[,rownames(A1)]
     Z1 <- Z[,colnames(A1)]
-    Z2 <- Z[,names(B1)]
-    #add column of 1 (later we calculate 1 %*% B1_Z2, and so adding B1_Z2)
-    X1 <- cbind(X1, one)
-    B1_Z2 <- B1 %*% t(Z2)
     A1_Z1 <- A1 %*% t(Z1)
-    A1_Z1 <- rbind(A1_Z1, B1_Z2)
   }
-  rownames(A1_Z1)[nrow(A1_Z1)] <- "cons"
+  B1 <- coef.mat$z_coef
+  if(!is.null(B1)){
+    Z2 <- Z[,names(B1)]
+    B1_Z2 <- B1 %*% t(Z2)
+    A1_Z1 <- rbind(A1_Z1, B1_Z2)
+    rownames(A1_Z1)[nrow(A1_Z1)] <- "cons"
+    #add column of 1 (later we calculate 1 %*% B1_Z2 and so adding B1_Z2)
+    X1 <- cbind(X1, one)
+  }
   #generate district table
   dis_table <- gen_dist(X.location, n)
   districts <- unique(dis_table$dis)
@@ -111,6 +112,7 @@ predict_ooi <- function(coef.mat, X,
     B2 <- coef.mat$d_coef
     A2 <- coef.mat$xd_mat
     A3 <- coef.mat$dz_mat
+    #prepare matrices
     are_null <- c(is.null(A2), is.null(A3))
     if(!are_null[1]){ #we need to calculate X2*A2*D' and B2*D'
       X2 <- X[,row.names(A2)]
@@ -123,16 +125,18 @@ predict_ooi <- function(coef.mat, X,
     if(!are_null[2]){ #we need to calculate A3*"Z3*D
       Z3 <- Z[,colnames(A3)]
     }
+    #start calculations
     if(all(!are_null)){
       for(i in districts){
         workers <- dis_table$worker[dis_table$dis == i]
         Xi <- X[workers,]
         D <- gen_dist_mat(workers, X.location, Z.location, n, dist.fun, dist.order)
+        A1_Z1i <- A1_Z1
         for(p in 1:dist.order){
           DpZ3 <- as.vector(D[,p]) * Z3
-          A1_Z1["cons",] <- A1_Z1["cons",] + DpZ3 %*% A3[p,]
+          A1_Z1i["cons",] <- A1_Z1i["cons",] + DpZ3 %*% A3[p,]
         }
-        logp <- Xi %*% rbind(A1_Z1, t(D))
+        logp <- Xi %*% rbind(A1_Z1i, t(D))
         dis_table$ooi[dis_table$dis == i] <- calc_ooi(logp, wgt)
         #print and update progress
         setTxtProgressBar(pb,stepi)
@@ -149,17 +153,36 @@ predict_ooi <- function(coef.mat, X,
         setTxtProgressBar(pb,stepi)
         stepi <- stepi + 1
       }
-    } else {
+    } else if (!are_null[2]){
       for(i in districts){
         workers <- dis_table$worker[dis_table$dis == i]
         Xi <- X1[workers,]
         D <- gen_dist_mat(workers, X.location, Z.location, n, dist.fun, dist.order)
+        A1_Z1i <- A1_Z1
         for(p in 1:dist.order){
           DpZ3 <- as.vector(D[,p]) * Z3
-          A1_Z1["cons",] <- A1_Z1["cons",] + DpZ3 %*% A3[p,]
+          A1_Z1i["cons",] <- A1_Z1i["cons",] + DpZ3 %*% A3[p,]
         }
-        A1_Z1["cons",] <- A1_Z1["cons",] + D %*% B2
-        logp <- Xi %*% A1_Z1
+        A1_Z1i["cons",] <- A1_Z1i["cons",] + D %*% B2
+        logp <- Xi %*% A1_Z1i
+        dis_table$ooi[dis_table$dis == i] <- calc_ooi(logp, wgt)
+        #print and update progress
+        setTxtProgressBar(pb,stepi)
+        stepi <- stepi + 1
+      }
+    } else {
+      for(i in districts){
+        workers <- dis_table$worker[dis_table$dis == i]
+        Xi <- X1[workers, ,drop = F]
+        D <- gen_dist_mat(workers, X.location, Z.location, n, dist.fun, dist.order)
+        A1_Z1i <- A1_Z1
+        if(is.null(B1)){
+          Xi <- cbind(Xi, rep(1, nrow(Xi)))
+          A1_Z1i <- rbind(A1_Z1i, t(D %*% B2))
+        } else {
+          A1_Z1i["cons",] <- A1_Z1i["cons",] + D %*% B2
+        }
+        logp <- Xi %*% A1_Z1i
         dis_table$ooi[dis_table$dis == i] <- calc_ooi(logp, wgt)
         #print and update progress
         setTxtProgressBar(pb,stepi)

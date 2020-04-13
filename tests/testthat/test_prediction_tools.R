@@ -32,7 +32,7 @@ z_loc <- Z_loc[est_data$job_id,]
 D <- calc_dist(x_loc, z_loc)
 est_data <- cbind(est_data, D)
 
-test_that("calc_ooi returns the same results as predict (with x_*d)", {
+test_that("predict_ooi returns the same results as predict; formula = ~ x_ * z_ + x_ * d", {
   #prepare formula for estimation
   formula <- prep_form(~ x_ * z_ + x_ * d, c(Xnames, Znames))
   #estimate logit
@@ -53,10 +53,10 @@ test_that("calc_ooi returns the same results as predict (with x_*d)", {
     w <- w / sum(w)
     ooi_predict <- c(ooi_predict, calc_ooi(f, w))
   }
-  expect_true(min(abs(ooi_predict - ooi_package)) < 0.001)
+  expect_true(max(abs(ooi_predict - ooi_package)) < 0.001)
 })
 
-test_that("calc_ooi returns the same results as predict (with x_*d & d*z_)", {
+test_that("predict_ooi returns the same results as predict; formula = ~ x_*z_ + x_*d + d*z_", {
   #prepare formula for estimation
   formula <- prep_form(~ x_*z_ + x_*d + d*z_, c(Xnames, Znames))
   #estimate logit
@@ -77,10 +77,10 @@ test_that("calc_ooi returns the same results as predict (with x_*d & d*z_)", {
     w <- w / sum(w)
     ooi_predict <- c(ooi_predict, calc_ooi(f, w))
   }
-  expect_true(min(abs(ooi_predict - ooi_package)) < 0.001)
+  expect_true(max(abs(ooi_predict - ooi_package)) < 0.001)
 })
 
-test_that("calc_ooi returns the same results as predict (with d*z_)", {
+test_that("predict_ooi returns the same results as predict; formula = ~ x_*z_ + d*z_", {
   #prepare formula for estimation
   formula <- prep_form(~ x_*z_ + d*z_, c(Xnames, Znames))
   #estimate logit
@@ -101,10 +101,10 @@ test_that("calc_ooi returns the same results as predict (with d*z_)", {
     w <- w / sum(w)
     ooi_predict <- c(ooi_predict, calc_ooi(f, w))
   }
-  expect_true(min(abs(ooi_predict - ooi_package)) < 0.001)
+  expect_true(max(abs(ooi_predict - ooi_package)) < 0.001)
 })
 
-test_that("calc_ooi returns the same results as predict (without x_*z_)", {
+test_that("predict_ooi returns the same results as predict; formula = ~ x_ * d", {
   #prepare formula for estimation
   formula <- prep_form(~ x_ * d, c(Xnames, Znames))
   #estimate logit
@@ -125,5 +125,77 @@ test_that("calc_ooi returns the same results as predict (without x_*z_)", {
     w <- w / sum(w)
     ooi_predict <- c(ooi_predict, calc_ooi(f, w))
   }
-  expect_true(min(abs(ooi_predict - ooi_package)) < 0.001)
+  expect_true(max(abs(ooi_predict - ooi_package)) < 0.001)
+})
+
+test_that("predict_ooi returns the same results as predict; formula = ~ x_ + z_ + d_", {
+  #prepare formula for estimation
+  formula <- prep_form(~ x_ + z_ + d, c(Xnames, Znames))
+  #estimate logit
+  logit <- glm(as.formula(formula), family = binomial(link='logit'),
+               data = est_data, weights = est_data$w)
+  coeffs <- logit$coefficients
+  coef_matrices <- coef_reshape(coeffs)
+  ooi_package <- predict_ooi(coef_matrices, X, Z, X_loc, Z_loc, wgt = w)
+  ooi_predict <- c()
+  #calc ooi for each worker with predict
+  for(i in 1:n){
+    Xi <- matrix(rep(X[i,], n), ncol = m, byrow = T,
+                 dimnames = list(NULL, Xnames))
+    X_loc_i <- matrix(rep(X_loc[i,], n), nrow = n, byrow = T)
+    D <- calc_dist(X_loc_i, Z_loc)
+    df <- cbind.data.frame(Xi, Z, D)
+    f <- t(as.matrix(predict(logit, newdata = df)))
+    w <- w / sum(w)
+    ooi_predict <- c(ooi_predict, calc_ooi(f, w))
+  }
+  expect_true(max(abs(ooi_predict - ooi_package)) < 0.001)
+})
+
+test_that("predict_ooi returns the same results as predict; formula = ~ z_ + d", {
+  #prepare formula for estimation
+  formula <- prep_form(~ z_ + d, c(Xnames, Znames))
+  #estimate logit
+  logit <- glm(as.formula(formula), family = binomial(link='logit'),
+               data = est_data, weights = est_data$w)
+  coeffs <- logit$coefficients
+  coef_matrices <- coef_reshape(coeffs)
+  ooi_package <- predict_ooi(coef_matrices, X, Z, X_loc, Z_loc, wgt = w)
+  ooi_predict <- c()
+  #calc ooi for each worker with predict
+  for(i in 1:n){
+    Xi <- matrix(rep(X[i,], n), ncol = m, byrow = T,
+                 dimnames = list(NULL, Xnames))
+    X_loc_i <- matrix(rep(X_loc[i,], n), nrow = n, byrow = T)
+    D <- calc_dist(X_loc_i, Z_loc)
+    df <- cbind.data.frame(Xi, Z, D)
+    f <- t(as.matrix(predict(logit, newdata = df)))
+    w <- w / sum(w)
+    ooi_predict <- c(ooi_predict, calc_ooi(f, w))
+  }
+  expect_true(max(abs(ooi_predict - ooi_package)) < 0.001)
+})
+
+test_that("predict_ooi returns the same results as predict; formula = ~ x_ + d", {
+  #prepare formula for estimation
+  formula <- prep_form(~ x_ + d, c(Xnames, Znames))
+  #estimate logit
+  logit <- glm(as.formula(formula), family = binomial(link='logit'),
+               data = est_data, weights = est_data$w)
+  coeffs <- logit$coefficients
+  coef_matrices <- coef_reshape(coeffs)
+  ooi_package <- predict_ooi(coef_matrices, X, Z, X_loc, Z_loc, wgt = w)
+  ooi_predict <- c()
+  #calc ooi for each worker with predict
+  for(i in 1:n){
+    Xi <- matrix(rep(X[i,], n), ncol = m, byrow = T,
+                 dimnames = list(NULL, Xnames))
+    X_loc_i <- matrix(rep(X_loc[i,], n), nrow = n, byrow = T)
+    D <- calc_dist(X_loc_i, Z_loc)
+    df <- cbind.data.frame(Xi, Z, D)
+    f <- t(as.matrix(predict(logit, newdata = df)))
+    w <- w / sum(w)
+    ooi_predict <- c(ooi_predict, calc_ooi(f, w))
+  }
+  expect_true(max(abs(ooi_predict - ooi_package)) < 0.001)
 })

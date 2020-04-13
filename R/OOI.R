@@ -6,7 +6,8 @@
 #'
 #' @param formula a formula describing the model to be fitted in order to
 #'                estimate P(Z|X) / P(Z). This formula uses a syntax similar to STATA, and so
-#'                "x_" refers to all variables with the prefix "x". Similarly, "d" refers
+#'                "x_" refers to all variables with the prefix "x", while
+#'                "z_" refers to all variables with the prefix "z". Similarly, "d" refers
 #'                to the distance polynomial (see the example below).
 #' @param X matrix or data frame with workers characteristics. Note that all column names
 #'          should start with "x" (necessary for \code{\link{coef_reshape}}).
@@ -51,9 +52,10 @@ OOI <- function(formula = NULL,
                 dist.fun = geo_dist,
                 dist.order = 2,
                 seed = runif(1, 0, .Machine$integer.max)){
-  #validate input
-  #validate_data
-  #validate_formula
+  formula <- validate_input(formula, X, Z, X.location, Z.location, wgt)
+  #prepare formula for estimation
+  var_names <- c(colnames(X), colnames(Z))
+  formula <- prep_form(formula, var_names, dist.order)
   #prepare data for logit estimation
   est_data <- prep_data(X, Z, wgt, sim.factor, seed)
   #merge with distance
@@ -63,9 +65,6 @@ OOI <- function(formula = NULL,
     D <- calc_dist(x_loc, z_loc, dist.fun, dist.order)
     est_data <- cbind(est_data, D)
   }
-  #prepare formula for estimation
-  var_names <- c(colnames(X), colnames(Z))
-  formula <- prep_form(formula, var_names, dist.order)
   #estimate logit
   logit <- glm(as.formula(formula), family = binomial(link='logit'),
                data = est_data, weights = est_data$w)
@@ -143,4 +142,19 @@ predict.ooi <- function(object,
                        wgt, x$dist.fun, x$dist.order)
     return(ooi)
   }
+}
+
+#' Add prefix
+#'
+#' Adds a prefix to the column names of a matrix
+#'
+#' @param df data.frame or matrix
+#' @param prefix a prefix to be added
+#'
+#' @return matrix / data.frame with new column names.
+add_prefix <- function(df, prefix){
+  col_names <- colnames(df)
+  col_names <- paste0(prefix, col_names)
+  colnames(df) <- col_names
+  return(df)
 }

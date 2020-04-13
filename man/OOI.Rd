@@ -12,7 +12,8 @@ OOI(formula = NULL, X, Z = NULL, X.location = NULL,
 \arguments{
 \item{formula}{a formula describing the model to be fitted in order to
 estimate P(Z|X) / P(Z). This formula uses a syntax similar to STATA, and so
-"x_" refers to all variables with the prefix "x". Similarly, "d" refers
+"x_" refers to all variables with the prefix "x", while
+"z_" refers to all variables with the prefix "z". Similarly, "d" refers
 to the distance polynomial (see the example below).}
 
 \item{X}{matrix or data frame with workers characteristics. Note that all column names

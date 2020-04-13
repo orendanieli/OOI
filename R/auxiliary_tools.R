@@ -59,9 +59,14 @@ prep_data <- function(X, Z = NULL, wgt = rep(1, nrow(X)),
 }
 
 #prepares formula for glm
+#this function also validates that without distance, X*Z must be included
 prep_form <- function(formula, var.names, dist.order = 2){
   terms_labels <- labels(terms(formula))
   n <- length(terms_labels)
+  #flag for distance
+  d_included <- F
+  #flag for X*Z
+  xz_included <- F
   #initialize formula
   form <- "~ 1"
   for(i in 1:n){
@@ -69,16 +74,23 @@ prep_form <- function(formula, var.names, dist.order = 2){
     #Is this an interaction term?
     inter_term <- grepl(":", term)
     if(!inter_term){
+      if(term == "d"){d_included <- T}
       form <- paste(form, ext_names(term, var.names, dist.order), sep = " + ")
     } else {
       #divide to left vars & right vars
       left_vars <- ext_names(div_inter(term)$left, var.names, dist.order)
       right_vars <- ext_names(div_inter(term)$right, var.names, dist.order)
+      fchar_l <- substr(left_vars, 1, 1)
+      fchar_r <- substr(right_vars, 1, 1)
+      if(fchar_r == "x" & fchar_l == "z" | fchar_r == "z" & fchar_l == "x")
+        xz_included <- T
       #paste back
       tmp <- paste0("(", left_vars, ")", ":", "(", right_vars, ")")
       form <- paste(form, tmp, sep = " + ")
     }
   }
+  if(!d_included & !xz_included)
+    stop("either distance ('d') or interaction between X & Z must be included")
   form <- paste("y", form, sep = " ")
   return(form)
 }
