@@ -134,7 +134,7 @@ predict_ooi <- function(coef.mat, X,
         A1_Z1i <- A1_Z1
         for(p in 1:dist.order){
           DpZ3 <- as.vector(D[,p]) * Z3
-          A1_Z1i["cons",] <- A1_Z1i["cons",] + DpZ3 %*% A3[p,]
+          A1_Z1i["cons",] <- A1_Z1i["cons",] + DpZ3 %*% A3[p, ,drop = F]
         }
         logp <- Xi %*% rbind(A1_Z1i, t(D))
         dis_table$ooi[dis_table$dis == i] <- calc_ooi(logp, wgt)

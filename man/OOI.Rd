@@ -39,7 +39,8 @@ worker and job using 'dist.fun'.}
 (relative to real data).}
 
 \item{dist.fun}{a distance function to calculate the distance between X.location and
-Z.location.}
+Z.location. The default function \code{\link{geo_dist}} is suitable
+for data with geo-coordinates.}
 
 \item{dist.order}{the order of the distance polynomial.}
 

@@ -24,7 +24,8 @@
 #' @param sim.factor a variable that determines how much fake data to simulate
 #'                   (relative to real data).
 #' @param dist.fun a distance function to calculate the distance between X.location and
-#'                 Z.location.
+#'                 Z.location. The default function \code{\link{geo_dist}} is suitable
+#'                 for data with geo-coordinates.
 #' @param dist.order the order of the distance polynomial.
 #' @param seed the seed of the random number generator.
 #'

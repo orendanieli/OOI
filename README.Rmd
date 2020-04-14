@@ -1,23 +1,27 @@
+---
+output: github_document
+---
 
-OOI: Outside Option Index
-=========================
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#OOI: Outside Option Index
 
 An R package that calculates the Outside Option Index proposed by Caldwell and Danieli (2018). This index uses the cross- sectional concentration of similar workers across job types to quantify the availability of outside options as a function of workers’ characteristics (e.g. commuting costs, preferences, and skills.)
 
-Installation
-------------
+
+##Installation
 
 Currently, only the GitHub version is available through:
-
-``` r
+```{r, message=FALSE, eval=FALSE}
 #install.packages("devtools")
 devtools::install_github("eladg9/OOI")
 ```
 
-Useage Example
---------------
+##Useage Example
 
-``` r
+```{r, message=FALSE, eval=FALSE}
 library(OOI)
 #generate data
 #worker and job characteristics:
@@ -48,5 +52,6 @@ new_ooi <- predict(ooi_object, new.coef = coeffs)
 #for further details.
 ```
 
-References
-----------
+##References
+
+
