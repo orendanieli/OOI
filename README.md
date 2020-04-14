@@ -40,7 +40,7 @@ ooi_object <- OOI(formula = ~ x_*z_ + x_*d + z_*d, X = X, Z = Z,
                   sim.factor = 3, dist.fun = dist_metric, dist.order = 3)
 #we can extract the ooi using predict():
 ooi <- predict(ooi_object)
-#we can estimate the ooi using different coefficients (for counterfactual analysis):
+#we can also estimate the ooi with different coefficients (for counterfactual analysis):
 coeffs <- ooi_object$coeffs
 coeffs[names(coeffs) == "x.men"] <- 0
 new_ooi <- predict(ooi_object, new.coef = coeffs)
