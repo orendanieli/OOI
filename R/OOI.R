@@ -73,6 +73,7 @@ OOI <- function(formula = NULL,
   coeffs_sd <- round(sqrt(diag(vcov(logit))), 4)
   pseudo_r2 <- round(1 - (logit$deviance / logit$null.deviance), 3)
   #calculate standardized coefficients
+  est_data <- expand_matrix(est_data[est_data$y == 1,])
   stand_coeffs <- standardize(coeffs[-1], est_data, wgt)
   #reshape coefficients (necessary for prediction)
   coef_matrices <- coef_reshape(coeffs)

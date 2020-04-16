@@ -134,7 +134,7 @@ standardize <- function(coeffs, dat, wgt){
   coef_names <- names(coeffs)
   inter_pos <- grepl(":", coef_names)
   rel_vars <- coef_names[!inter_pos] #variables without interaction
-  sd <- apply(dat[dat$y == 1, rel_vars], 2,
+  sd <- apply(dat[, rel_vars], 2,
               function(x, w = wgt){sqrt(Hmisc::wtd.var(x, w))})
   coeffs[rel_vars] <- coeffs[rel_vars] * sd
   #for interaction terms, we need to mulitply by the SD of each variable
@@ -148,4 +148,15 @@ standardize <- function(coeffs, dat, wgt){
   return(coeffs)
 }
 
-
+#converts data.frame to matrix and expands factors to a set of dummy variables
+expand_matrix <- function(df){
+  if(is.matrix(df) | is.null(df)){
+    return(df)
+  }
+  form <- paste("~", paste0(colnames(df), collapse = "+"))
+  form <- as.formula(form)
+  df <- model.matrix(form, df)
+  #delete intercept
+  df <- df[, -1, drop = F]
+  return(df)
+}

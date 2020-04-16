@@ -36,8 +36,8 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_ * z_ 
   #prepare formula for estimation
   formula <- prep_form(~ x_ * z_ + x_ * d, c(Xnames, Znames))
   #estimate logit
-  logit <- glm(as.formula(formula), family = binomial(link='logit'),
-               data = est_data, weights = est_data$w)
+  logit <- suppressWarnings(glm(as.formula(formula), family = binomial(link='logit'),
+               data = est_data, weights = est_data$w))
   coeffs <- logit$coefficients
   coef_matrices <- coef_reshape(coeffs)
   ooi_package <- predict_ooi(coef_matrices, X, Z, X_loc, Z_loc, wgt = w)
@@ -60,8 +60,8 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_*z_ + 
   #prepare formula for estimation
   formula <- prep_form(~ x_*z_ + x_*d + d*z_, c(Xnames, Znames))
   #estimate logit
-  logit <- glm(as.formula(formula), family = binomial(link='logit'),
-               data = est_data, weights = est_data$w)
+  logit <- suppressWarnings(glm(as.formula(formula), family = binomial(link='logit'),
+                                data = est_data, weights = est_data$w))
   coeffs <- logit$coefficients
   coef_matrices <- coef_reshape(coeffs)
   ooi_package <- predict_ooi(coef_matrices, X, Z, X_loc, Z_loc, wgt = w)
@@ -84,8 +84,8 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_*z_ + 
   #prepare formula for estimation
   formula <- prep_form(~ x_*z_ + d*z_, c(Xnames, Znames))
   #estimate logit
-  logit <- glm(as.formula(formula), family = binomial(link='logit'),
-               data = est_data, weights = est_data$w)
+  logit <- suppressWarnings(glm(as.formula(formula), family = binomial(link='logit'),
+                                data = est_data, weights = est_data$w))
   coeffs <- logit$coefficients
   coef_matrices <- coef_reshape(coeffs)
   ooi_package <- predict_ooi(coef_matrices, X, Z, X_loc, Z_loc, wgt = w)
@@ -108,8 +108,8 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_ * d",
   #prepare formula for estimation
   formula <- prep_form(~ x_ * d, c(Xnames, Znames))
   #estimate logit
-  logit <- glm(as.formula(formula), family = binomial(link='logit'),
-               data = est_data, weights = est_data$w)
+  logit <- suppressWarnings(glm(as.formula(formula), family = binomial(link='logit'),
+                                data = est_data, weights = est_data$w))
   coeffs <- logit$coefficients
   coef_matrices <- coef_reshape(coeffs)
   ooi_package <- predict_ooi(coef_matrices, X, Z, X_loc, Z_loc, wgt = w)
@@ -132,8 +132,8 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_ + z_ 
   #prepare formula for estimation
   formula <- prep_form(~ x_ + z_ + d, c(Xnames, Znames))
   #estimate logit
-  logit <- glm(as.formula(formula), family = binomial(link='logit'),
-               data = est_data, weights = est_data$w)
+  logit <- suppressWarnings(glm(as.formula(formula), family = binomial(link='logit'),
+                                data = est_data, weights = est_data$w))
   coeffs <- logit$coefficients
   coef_matrices <- coef_reshape(coeffs)
   ooi_package <- predict_ooi(coef_matrices, X, Z, X_loc, Z_loc, wgt = w)
@@ -156,8 +156,8 @@ test_that("predict_ooi returns the same results as predict; formula = ~ z_ + d",
   #prepare formula for estimation
   formula <- prep_form(~ z_ + d, c(Xnames, Znames))
   #estimate logit
-  logit <- glm(as.formula(formula), family = binomial(link='logit'),
-               data = est_data, weights = est_data$w)
+  logit <- suppressWarnings(glm(as.formula(formula), family = binomial(link='logit'),
+                                data = est_data, weights = est_data$w))
   coeffs <- logit$coefficients
   coef_matrices <- coef_reshape(coeffs)
   ooi_package <- predict_ooi(coef_matrices, X, Z, X_loc, Z_loc, wgt = w)
@@ -180,8 +180,8 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_ + d",
   #prepare formula for estimation
   formula <- prep_form(~ x_ + d, c(Xnames, Znames))
   #estimate logit
-  logit <- glm(as.formula(formula), family = binomial(link='logit'),
-               data = est_data, weights = est_data$w)
+  logit <- suppressWarnings(glm(as.formula(formula), family = binomial(link='logit'),
+                                data = est_data, weights = est_data$w))
   coeffs <- logit$coefficients
   coef_matrices <- coef_reshape(coeffs)
   ooi_package <- predict_ooi(coef_matrices, X, Z, X_loc, Z_loc, wgt = w)

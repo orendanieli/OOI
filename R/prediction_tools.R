@@ -72,6 +72,8 @@ predict_ooi <- function(coef.mat, X,
                         dist.order = 2) {
   n <- nrow(X)
   one <- rep(1, n)
+  X <- expand_matrix(X)
+  Z <- expand_matrix(Z)
   A1 <- coef.mat$xz_mat
   if(is.null(A1)){
     #initialize with zeros, so they wouldnt affect calculations.
@@ -214,7 +216,7 @@ calc_ooi <- function(logp, wgt){
   return(ooi)
 }
 
-#grouping X.loc and returns district table. if X.loc is missing, generates
+#preforms grouping on X.loc and returns district table. if X.loc is missing, generates
 #fake district table.
 gen_dist <- function(X.loc = NULL, n){
   if(is.null(X.loc)){
@@ -240,4 +242,5 @@ gen_dist_mat <- function(workers, X.location, Z.location, n,
   D <- calc_dist(X_loc, Z.location, dist.fun, dist.order)
   D <- as.matrix(D)
 }
+
 
