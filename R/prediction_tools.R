@@ -123,18 +123,18 @@ predict_ooi <- function(coef.mat, X,
       X <- cbind(X1, X2_A2)
     }
     if(!are_null[2]){ #we need to calculate A3*"Z3*D
-      Z3 <- Z[,colnames(A3)]
+      Z3 <- Z[,colnames(A3), drop = F]
     }
     #start calculations
     if(all(!are_null)){
       for(i in districts){
         workers <- dis_table$worker[dis_table$dis == i]
-        Xi <- X[workers,]
+        Xi <- X[workers, ,drop = F]
         D <- gen_dist_mat(workers, X.location, Z.location, n, dist.fun, dist.order)
         A1_Z1i <- A1_Z1
         for(p in 1:dist.order){
           DpZ3 <- as.vector(D[,p]) * Z3
-          A1_Z1i["cons",] <- A1_Z1i["cons",] + DpZ3 %*% A3[p, ,drop = F]
+          A1_Z1i["cons",] <- A1_Z1i["cons", ] + DpZ3 %*% A3[p, ]
         }
         logp <- Xi %*% rbind(A1_Z1i, t(D))
         dis_table$ooi[dis_table$dis == i] <- calc_ooi(logp, wgt)
