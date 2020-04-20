@@ -40,8 +40,8 @@ test_that("OOI returns correct output", {
 
 test_that("OOI returns the same results for matrices and data frames with factors", {
   #simulate data (matrices and data frames)
-  n <- 50
-  men <- rbinom(n, 1, 0.5)
+  n <- 100
+  men <-rbinom(n, 1, 0.5)
   native <- rbinom(n, 1, 0.5)
   size <- rbinom(n, 3, 0.5)
   wage <- rnorm(n, 100, 10)
@@ -51,17 +51,20 @@ test_that("OOI returns the same results for matrices and data frames with factor
   X_mat <- add_prefix(X_mat, "x.")
   Z_df <- data.frame(z.size = factor(size, c(0,1,2,3), c("A", "B", "C", "D")),
                      z.wage = wage)
-  Z_mat <- cbind(wage, A = 1*(size == 0), B = 1*(size == 1),
-                 C = 1*(size == 2))
+  Z_mat <- cbind(wage, A = 1*(size == 1), B = 1*(size == 0),
+                 C = 1*(size == 3))
   Z_mat <- add_prefix(Z_mat, "z.")
   X_loc <- matrix(runif(2*n, 40, 42), ncol = 2)
   Z_loc <- matrix(runif(2*n, 40, 42), ncol = 2)
   #compare results:
-  mat_results <- suppressWarnings(OOI(~  x_*d , X = X_mat,
+  mat_results <- suppressWarnings(OOI(~  x_*z_ + z_*d + x_*d, X = X_mat,
                                       Z = Z_mat, X_loc, Z_loc, sim.factor = 3,
                                       seed = 2))
-  df_results <- suppressWarnings(OOI(~  x_*d , X = X_df,
+  df_results <- suppressWarnings(OOI(~  x_*z_ + z_*d + x_*d, X = X_df,
                                       Z = Z_df, X_loc, Z_loc, sim.factor = 3,
                                      seed = 2))
+  warning(max(abs(mat_results$ooi - df_results$ooi)))
   expect_true(max(abs(mat_results$ooi - df_results$ooi)) < 0.01)
 })
+
+

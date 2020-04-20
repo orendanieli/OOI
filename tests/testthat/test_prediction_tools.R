@@ -16,13 +16,27 @@ test_that("coef_reshape returns correct coefficient matrices", {
 })
 
 #generate data
-n <- 40
+n <- 50
 m <- 4
 w <- rexp(n)
 Xnames <- paste0("x.", 1:m)
 Znames <- paste0("z.", 1:m)
-X <- matrix(rnorm(n*m), ncol = m, dimnames = list(NULL, Xnames))
-Z <- matrix(rnorm(n*m), ncol = m, dimnames = list(NULL, Znames))
+######
+m <- 2
+men <-rbinom(n, 1, 0.5)
+native <- rbinom(n, 1, 0.5)
+size <- rbinom(n, 3, 0.5)
+wage <- rnorm(n, 100, 10)
+X<- as.matrix(cbind(men, native))
+X <- add_prefix(X, "x.")
+Z <- cbind(wage, A = 1*(size == 1), B = 1*(size == 2),
+               C = 1*(size == 3))
+Z <- add_prefix(Z, "z.")
+Xnames <- colnames(X)
+Znames <- colnames(Z)
+#####
+#X <- matrix(rnorm(n*m), ncol = m, dimnames = list(NULL, Xnames))
+#Z <- matrix(rnorm(n*m), ncol = m, dimnames = list(NULL, Znames))
 X_loc <- matrix(runif(2*n, 40, 42), ncol = 2)
 Z_loc <- matrix(runif(2*n, 40, 42), ncol = 2)
 est_data <- prep_data(X, Z, wgt =  w, sim.factor = 5, seed = 4)

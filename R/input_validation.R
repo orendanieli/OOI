@@ -6,15 +6,18 @@ validate_input <- function(formula, X, Z, X.location, Z.location, wgt){
      (is.null(X.location) & !is.null(Z.location))){
     stop("both Z.location and X.location are needed")
   }
+  if(any(is.na(X)))
+    stop("X contains NA values, which aren't allowed")
   n <- nrow(X)
   validate_type(Z, "Z", n)
   validate_type(Z.location, "Z.location", n)
   validate_type(X.location, "X.location", n)
   validate_colnames(X, "x")
   validate_colnames(Z, "z")
-  if(!inherits(wgt, "numeric") | n != length(wgt)){
+  if(!inherits(wgt, "numeric") | n != length(wgt) | any(is.na(wgt))){
     stop(paste("wgt must be numeric,",
-               "with the same number of examples as X."))
+               "with the same number of examples as X.",
+               "missing values aren't allowed"))
   }
   #validate formula
   if(is.null(formula)){
@@ -63,6 +66,9 @@ validate_type <- function(df, df.name, exp.length){
     }
     if(nrow(df) != exp.length){
       stop(paste("X and", df.name, "don't have the same number of rows"))
+    }
+    if(any(is.na(df))){
+      stop(paste(df.name, "contains NA values, which aren't allowed"))
     }
   }
 }
