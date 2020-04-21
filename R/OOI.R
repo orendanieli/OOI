@@ -69,7 +69,7 @@ OOI <- function(formula = NULL,
   #estimate logit
   logit <- glm(as.formula(formula), family = binomial(link='logit'),
                data = est_data, weights = est_data$w)
-  coeffs <- round(logit$coefficients, 4)
+  coeffs <- logit$coefficients
   coeffs_sd <- round(sqrt(diag(vcov(logit))), 4)
   pseudo_r2 <- round(1 - (logit$deviance / logit$null.deviance), 3)
   #calculate standardized coefficients
@@ -85,7 +85,7 @@ OOI <- function(formula = NULL,
                     wgt = wgt,
                     dist.fun = dist.fun,
                     dist.order = dist.order)
-  output <- list(coeffs = coeffs,
+  output <- list(coeffs = round(coeffs, 4),
                  coeffs_sd = coeffs_sd,
                  pseudo_r2 = pseudo_r2,
                  standardized_coeffs = stand_coeffs,

@@ -40,7 +40,7 @@ test_that("OOI returns correct output", {
 
 test_that("OOI returns the same results for matrices and data frames with factors", {
   #simulate data (matrices and data frames)
-  n <- 100
+  n <- 50
   men <-rbinom(n, 1, 0.5)
   native <- rbinom(n, 1, 0.5)
   size <- rbinom(n, 3, 0.5)
@@ -63,7 +63,6 @@ test_that("OOI returns the same results for matrices and data frames with factor
   df_results <- suppressWarnings(OOI(~  x_*z_ + z_*d + x_*d, X = X_df,
                                       Z = Z_df, X_loc, Z_loc, sim.factor = 3,
                                      seed = 2))
-  warning(max(abs(mat_results$ooi - df_results$ooi)))
   expect_true(max(abs(mat_results$ooi - df_results$ooi)) < 0.01)
 })
 

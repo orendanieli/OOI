@@ -40,10 +40,11 @@ for(j in 1:10){
   #compare results:
   mat_results <- suppressWarnings(OOI(~  x_*z_ + x_*d + z_*d, X = X_mat,
                                       Z = Z_mat, X_loc, Z_loc, sim.factor = 3,
-                                      seed = seed))
+                                      seed = seed, dist.order = 3))
   df_results <- suppressWarnings(OOI(~  x_*z_ + x_*d + z_*d, X = X_df,
                                      Z = Z_df, X_loc, Z_loc, sim.factor = 3,
-                                     seed = seed))
+                                     seed = seed, dist.order = 3))
+  print(summary(abs(mat_results$ooi - df_results$ooi)))
   dif[j] = max(abs(mat_results$ooi - df_results$ooi))
 }
 summary(dif)
