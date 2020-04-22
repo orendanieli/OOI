@@ -14,8 +14,8 @@ Currently, only the GitHub version is available through:
 devtools::install_github("eladg9/OOI")
 ```
 
-Useage Example
---------------
+Usage Example
+-------------
 
 ``` r
 library(OOI)
