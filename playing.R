@@ -1,20 +1,25 @@
-n = 1000
+n = 10000
 X <- matrix(rnorm(4 * n), ncol = 4,
             dimnames = list(NULL, c("x.1", "x.2", "x.3", "x.4")))
 gender <- rbinom(n , 1, 0.5)
 gender <- factor(gender, levels = c(0,1), labels = c("women", "men"))
 native <- rbinom(n , 1, 0.5)
 native <- factor(native, levels = c(0,1), labels = c("yes", "no"))
-#X <- data.frame(x.gender = gender, x.native = native)
-Z <- matrix(rnorm(4 * n), ncol = 4,
-            dimnames = list(NULL, c("z.1", "z.2", "z.3", "z.4")))
+X <- data.frame(x.gender = gender, x.native = native)
+######
+Z <- matrix(rbinom(4 * n, 20, 0.3), ncol = 4,
+            dimnames = list(NULL, c("z.11", "z.12", "z.21", "z.22")))
+Z <- as.data.frame(Z)
+Z$z.11 <- as.factor(Z$z.11)
+Z$z.21 <- as.factor(Z$z.21)
+####
 X_loc <- matrix(runif(2 * n, 40, 42), ncol = 2)
 Z_loc <- matrix(runif(2 * n, 40, 42), ncol = 2)
 w = rexp(n)
 
 
-bla <- suppressMessages(OOI(~ x_ * z_ , X = X, Z = Z, sim.factor = 4))#,
-           X.location = X_loc, Z.location = Z_loc)
+bla <- OOI(~ x_ * z.1_ + z.2_ + x_*d + z.1_ * d, X = X, Z = Z,
+           X.location = X_loc, Z.location = Z_loc, sim.factor = 1)
 ############################
 dif = rep(NA,10)
 for(j in 1:10){

@@ -225,9 +225,10 @@ gen_dist <- function(X.loc = NULL, n){
     dis_table <- cbind.data.frame(worker = 1:n, dis = dis, ooi = rep(NA, n))
   } else {
     p <- ncol(X.loc)
-    #transform X.loc to list
-    X_loc <- lapply(seq_len(p), function(i){X.loc[,i]})
-    dis <- interaction(X_loc)
+    dis <- rep("_", n)
+    for(i in 1:p){
+      dis <- paste0(dis, X.loc[,p])
+    }
     dis_table <- cbind.data.frame(worker = 1:n, dis = dis, ooi = rep(NA, n))
   }
   return(dis_table)

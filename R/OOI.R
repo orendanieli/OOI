@@ -70,6 +70,14 @@ OOI <- function(formula = NULL,
   logit <- glm(as.formula(formula), family = binomial(link='logit'),
                data = est_data, weights = est_data$w)
   coeffs <- logit$coefficients
+  if(logit$rank < length(coeffs)){
+    message(paste("Logit was estimated on a singular matrix.",
+                  "increasing 'sim.factor' could resolve the problem"))
+  }
+  if(any(is.na(coeffs))){
+    message("Replacing NA coefficients with 0")
+    coeffs <- replace(coeffs, is.na(coeffs), 0)
+  }
   coeffs_sd <- round(sqrt(diag(vcov(logit))), 4)
   pseudo_r2 <- round(1 - (logit$deviance / logit$null.deviance), 3)
   #calculate standardized coefficients
