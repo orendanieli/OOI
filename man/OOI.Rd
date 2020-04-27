@@ -29,7 +29,7 @@ worker and job using 'dist.fun'.}
 
 \item{Z.location}{same as 'X.location' but for jobs.}
 
-\item{wgt}{an optional vector of weights.}
+\item{wgt}{an optional numeric vector of weights.}
 
 \item{pred}{logical. If TRUE (default), predicts ooi for the provided data.}
 

@@ -1,5 +1,14 @@
-#calculates geo distance between *two* points
+#' Geograp
+#'
+#' calculates geo distance between *two* points.
+#'
+#' @param x.loc a 2-length vector. the first value is for longitude,
+#'              the second for latitude.
+#' @param z.loc a 2-length vector. the first value is for longitude,
+#'              the second for latitude.
 geo_dist <- function(x.loc, z.loc){
+  x.loc <- as.numeric(x.loc)
+  z.loc <- as.numeric(z.loc)
   x.long <- x.loc[1]
   x.lat <- x.loc[2]
   z.long <- z.loc[1]

@@ -18,7 +18,7 @@
 #'                   feature that can be used in order to measure distance between
 #'                   worker and job using 'dist.fun'.
 #' @param Z.location same as 'X.location' but for jobs.
-#' @param wgt an optional vector of weights.
+#' @param wgt an optional numeric vector of weights.
 #' @param pred logical. If TRUE (default), predicts ooi for the provided data.
 #' @param method a method for estimating P(Z|X) / P(Z). currently not in use.
 #' @param sim.factor a variable that determines how much fake data to simulate
@@ -71,11 +71,8 @@ OOI <- function(formula = NULL,
                data = est_data, weights = est_data$w)
   coeffs <- logit$coefficients
   if(logit$rank < length(coeffs)){
-    message(paste("Logit was estimated on a singular matrix.",
-                  "increasing 'sim.factor' could resolve the problem"))
-  }
-  if(any(is.na(coeffs))){
-    message("Replacing NA coefficients with 0")
+    warning(paste("Logit was estimated on a singular matrix.",
+                  "Replacing NA coefficients with 0"))
     coeffs <- replace(coeffs, is.na(coeffs), 0)
   }
   coeffs_sd <- round(sqrt(diag(vcov(logit))), 4)
