@@ -144,7 +144,7 @@ standardize <- function(coeffs, dat, wgt){
   inter_pos <- grepl(":", coef_names)
   rel_vars <- coef_names[!inter_pos] #variables without interaction
   sd <- apply(dat[, rel_vars], 2,
-              function(x, w = wgt){sqrt(Hmisc::wtd.var(x, w))})
+              function(x, w = wgt){sqrt(modi::weighted.var(x, w))})
   coeffs[rel_vars] <- coeffs[rel_vars] * sd
   #for interaction terms, we need to mulitply by the SD of each variable
   inter_pos <- which(inter_pos)
