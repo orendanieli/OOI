@@ -1,4 +1,4 @@
-#' Geograp
+#' Geographical distance
 #'
 #' calculates geo distance between *two* points.
 #'
@@ -158,14 +158,18 @@ standardize <- function(coeffs, dat, wgt){
 }
 
 #converts data.frame to matrix and expands factors to a set of dummy variables
+#(including reference category)
 expand_matrix <- function(df){
   if(is.matrix(df) | is.null(df)){
     return(df)
   }
-  form <- paste("~", paste0(colnames(df), collapse = "+"))
-  form <- as.formula(form)
-  df <- model.matrix(form, df)
-  #delete intercept
-  df <- df[, -1, drop = F]
+  factors_ind <- sapply(df, is.factor)
+  if(sum(factors_ind) == 0){
+    return(df)
+  }
+  contrasts_arg <- lapply(data.frame(df[,factors_ind]),
+                          contrasts, contrasts = FALSE)
+  names(contrasts_arg) <- colnames(df)[factors_ind]
+  df <- model.matrix( ~ .-1, data = df, contrasts.arg = contrasts_arg)
   return(df)
 }
