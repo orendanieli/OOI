@@ -61,6 +61,10 @@ OOI <- function(formula = NULL,
   est_data <- prep_data(X, Z, wgt, sim.factor, seed)
   #merge with distance
   if(!is.null(X.location)){
+    if(all(apply(X.location, 2, is.numeric))){
+      #rounding is necessary for gen_dist()
+      X.location = round(X.location, 3)
+    }
     x_loc <- X.location[est_data$worker_id, , drop = F]
     z_loc <- Z.location[est_data$job_id, , drop = F]
     D <- calc_dist(x_loc, z_loc, dist.fun, dist.order)

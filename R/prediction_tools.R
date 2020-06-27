@@ -224,11 +224,7 @@ gen_dist <- function(X.loc = NULL, n){
     dis <- cut(1:n, n_dis, labels = as.character(1:n_dis))
     dis_table <- cbind.data.frame(worker = 1:n, dis = dis, ooi = rep(NA, n))
   } else {
-    p <- ncol(X.loc)
-    dis <- rep("_", n)
-    for(i in 1:p){
-      dis <- paste0(dis, X.loc[,p])
-    }
+    dis <- apply(X.loc, 1, paste0, collapse = "_")
     dis_table <- cbind.data.frame(worker = 1:n, dis = dis, ooi = rep(NA, n))
   }
   return(dis_table)
@@ -236,12 +232,13 @@ gen_dist <- function(X.loc = NULL, n){
 
 #generates distance matrix for workers from the same district
 gen_dist_mat <- function(workers, X.location, Z.location, n,
-                         dist.fun, dist.order){
+                         dist.fun = geo_dist, dist.order = 2){
   X_loc <- unique(X.location[workers,])
   #replicate X_loc to be compatible with calc_dist
   X_loc <- matrix(rep(X_loc, n), nrow = n, byrow = T)
   D <- calc_dist(X_loc, Z.location, dist.fun, dist.order)
   D <- as.matrix(D)
+  return(D)
 }
 
 
