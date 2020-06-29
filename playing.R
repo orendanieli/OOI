@@ -1,4 +1,4 @@
-n = 10000
+n = 100
 X <- matrix(rnorm(4 * n), ncol = 4,
             dimnames = list(NULL, c("x.1", "x.2", "x.3", "x.4")))
 gender <- rbinom(n , 1, 0.5)

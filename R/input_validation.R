@@ -61,7 +61,8 @@ validate_colnames <- function(df, char){
 
 validate_type <- function(df, df.name, exp.length){
   if(!is.null(df)){
-    if(!inherits(df, c("matrix","data.frame"))){
+    #files read by read_dta sometimes have strange class
+    if(!inherits(df, c("matrix","data.frame")) | length(class(df)) > 1){
       stop(paste(df.name, "should be either matrix or data.frame"))
     }
     if(nrow(df) != exp.length){
