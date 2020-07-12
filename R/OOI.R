@@ -32,7 +32,7 @@
 #' @return an object of class "ooi". This object is a list containing
 #' the following components:
 #'  \item{coeffs}{coefficients from the estimated logit.}
-#'  \item{coeffs_sd}{coefficients standard deviation.}
+#'  \item{coeffs_sd}{coefficients SE.}
 #'  \item{pseudo_r2}{McFadden's pseudo-R squared for the estimated logit.}
 #'  \item{standardized_coeffs}{standardized coefficients.}
 #'  \item{ooi}{the outside option index.}
@@ -79,7 +79,7 @@ OOI <- function(formula = NULL,
                   "Replacing NA coefficients with 0"))
     coeffs <- replace(coeffs, is.na(coeffs), 0)
   }
-  coeffs_sd <- round(sqrt(diag(vcov(logit))), 4)
+  coeffs_se <- round(sqrt(diag(vcov(logit))), 4)
   pseudo_r2 <- round(1 - (logit$deviance / logit$null.deviance), 3)
   #calculate standardized coefficients
   est_data <- expand_matrix(est_data[est_data$y == 1,])
@@ -95,7 +95,7 @@ OOI <- function(formula = NULL,
                     dist.fun = dist.fun,
                     dist.order = dist.order)
   output <- list(coeffs = round(coeffs, 4),
-                 coeffs_sd = coeffs_sd,
+                 coeffs_se = coeffs_se,
                  pseudo_r2 = pseudo_r2,
                  standardized_coeffs = stand_coeffs,
                  orig_arg = orig_arg)

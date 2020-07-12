@@ -56,6 +56,24 @@ prep_matrix <- function(inter_coef, term1, term2, coeffs){
   }
 }
 
+#this function returns df with two columns: unique - indicate which row in the input is unique
+#and bin - bin id (duplicated rows get the same bin id).
+#the df is in the same order of original data.
+bin_data <- function(dat){
+  dat <- as.data.frame(dat) #necessary for order()
+  #add id column - so the output will be in the same order of the input
+  dat$id <- 1:nrow(dat)
+  #sort dat without id (so the cumsum will get us what we want)
+  dat_no_id <- dat[ ,!(colnames(dat) %in% "id"), drop = F]
+  ord <- do.call(order, dat_no_id)
+  dat <- dat[ord, , drop = F]
+  dat_no_id <- dat_no_id[ord, , drop = F]
+  dat$unique <- !duplicated(dat_no_id)
+  dat$bin <- cumsum(dat$unique)
+  dat <- dat[order(dat$id), , drop = F]
+  return(data.frame(unique = dat$unique, bin = dat$bin))
+}
+
 #calculates ooi for the logit method, by looping over workers district
 #(district is just grouping of X.location). This is nice because d(i,j) is the
 #same for all workers from the same district.
@@ -70,15 +88,32 @@ predict_ooi <- function(coef.mat, X,
                         wgt = rep(1, nrow(X)),
                         dist.fun = geo_dist,
                         dist.order = 2) {
-  n <- nrow(X)
-  one <- rep(1, n)
+  #data binning, to speed up prediction
+  full_X <- cbind_null(X, X.location)
+  tmp <- bin_data(full_X)
+  X <- X[tmp$unique, , drop = F]
+  X.location <- X.location[tmp$unique, , drop = F]
+  binX <- tmp$bin[tmp$unique]
+  res <- data.frame(id = 1:nrow(tmp), binX = tmp$bin) #to merge the results back later
+  full_Z <- cbind_null(Z, Z.location)
+  tmp <- bin_data(full_Z)
+  Z <- Z[tmp$unique, , drop = F]
+  Z.location <- Z.location[tmp$unique, , drop = F]
+  binZ <- tmp$bin[tmp$unique]
+  wgt_list <- split(wgt, tmp$bin)
+  wgt <- sapply(wgt_list, sum) #those are the new weights
+  wgt <- wgt[binZ] #keep order
+  #################
+  n_X <- nrow(X) #currently it has to be exist
+  n_Z <- ifelse(is.null(Z), nrow(Z.location), nrow(Z)) #one of the two should exist
+  one <- rep(1, n_X)
   X <- expand_matrix(X)
   Z <- expand_matrix(Z)
   A1 <- coef.mat$xz_mat
   if(is.null(A1)){
     #initialize with zeros, so they wouldnt affect calculations.
-    X1 <- matrix(rep(0, n), ncol = 1)
-    A1_Z1 <- matrix(rep(0, n), nrow = 1)
+    X1 <- matrix(rep(0, n_X), ncol = 1)
+    A1_Z1 <- matrix(rep(0, n_Z), nrow = 1)
   } else {
     X1 <- X[,rownames(A1)]
     Z1 <- Z[,colnames(A1)]
@@ -94,7 +129,7 @@ predict_ooi <- function(coef.mat, X,
     X1 <- cbind(X1, one)
   }
   #generate district table
-  dis_table <- gen_dist(X.location, n)
+  dis_table <- gen_dist(X.location, n_X)
   districts <- unique(dis_table$dis)
   #create a progressbar object
   message("Predicting OOI:", "\n")
@@ -132,7 +167,7 @@ predict_ooi <- function(coef.mat, X,
       for(i in districts){
         workers <- dis_table$worker[dis_table$dis == i]
         Xi <- X[workers, ,drop = F]
-        D <- gen_dist_mat(workers, X.location, Z.location, n, dist.fun, dist.order)
+        D <- gen_dist_mat(workers, X.location, Z.location, dist.fun, dist.order)
         A1_Z1i <- A1_Z1
         for(p in 1:dist.order){
           DpZ3 <- as.vector(D[,p]) * Z3
@@ -148,7 +183,7 @@ predict_ooi <- function(coef.mat, X,
       for(i in districts){
         workers <- dis_table$worker[dis_table$dis == i]
         Xi <- X[workers,]
-        D <- gen_dist_mat(workers, X.location, Z.location, n, dist.fun, dist.order)
+        D <- gen_dist_mat(workers, X.location, Z.location, dist.fun, dist.order)
         logp <- Xi %*% rbind(A1_Z1, t(D))
         dis_table$ooi[dis_table$dis == i] <- calc_ooi(logp, wgt)
         #print and update progress
@@ -159,7 +194,7 @@ predict_ooi <- function(coef.mat, X,
       for(i in districts){
         workers <- dis_table$worker[dis_table$dis == i]
         Xi <- X1[workers,]
-        D <- gen_dist_mat(workers, X.location, Z.location, n, dist.fun, dist.order)
+        D <- gen_dist_mat(workers, X.location, Z.location, dist.fun, dist.order)
         A1_Z1i <- A1_Z1
         for(p in 1:dist.order){
           DpZ3 <- as.vector(D[,p]) * Z3
@@ -176,7 +211,7 @@ predict_ooi <- function(coef.mat, X,
       for(i in districts){
         workers <- dis_table$worker[dis_table$dis == i]
         Xi <- X1[workers, ,drop = F]
-        D <- gen_dist_mat(workers, X.location, Z.location, n, dist.fun, dist.order)
+        D <- gen_dist_mat(workers, X.location, Z.location, dist.fun, dist.order)
         A1_Z1i <- A1_Z1
         if(is.null(B1)){
           Xi <- cbind(Xi, rep(1, nrow(Xi)))
@@ -192,7 +227,11 @@ predict_ooi <- function(coef.mat, X,
       }
     }
   }
-  return(dis_table$ooi)
+  #merge back the results
+  dis_table$binX <- binX
+  res <- merge(x = res, y = dis_table, by = "binX", all.x = T)
+  res <- res[order(res$id), , drop = F] #keep the original order
+  return(res$ooi)
 }
 
 #calculates ooi from predicted log(P(Z|X) / P(Z)).
@@ -231,10 +270,11 @@ gen_dist <- function(X.loc = NULL, n){
 }
 
 #generates distance matrix for workers from the same district
-gen_dist_mat <- function(workers, X.location, Z.location, n,
+gen_dist_mat <- function(workers, X.location, Z.location,
                          dist.fun = geo_dist, dist.order = 2){
   X_loc <- unique(X.location[workers,])
   #replicate X_loc to be compatible with calc_dist
+  n <- nrow(Z.location)
   X_loc <- matrix(rep(X_loc, n), nrow = n, byrow = T)
   D <- calc_dist(X_loc, Z.location, dist.fun, dist.order)
   D <- as.matrix(D)

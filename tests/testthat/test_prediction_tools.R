@@ -15,16 +15,16 @@ test_that("coef_reshape returns correct coefficient matrices", {
                 all(output$xd_mat == A_dist) & all(output$dz_mat == dz_coef))
 })
 
-#generate data
-n <- 50
+#generate data with duplicates (to check that the binning procedure working fine)
+n <- 100
 m <- 4
-w <- rexp(n)
+w <- rexp(n, 0.5)
 Xnames <- paste0("x.", 1:m)
 Znames <- paste0("z.", 1:m)
-X <- matrix(rnorm(n*m), ncol = m, dimnames = list(NULL, Xnames))
-Z <- matrix(rnorm(n*m), ncol = m, dimnames = list(NULL, Znames))
-X_loc <- matrix(runif(2*n, 40, 42), ncol = 2)
-Z_loc <- matrix(runif(2*n, 40, 42), ncol = 2)
+X <- matrix(rgeom(n*m, 0.5), ncol = m, dimnames = list(NULL, Xnames))
+Z <- matrix(rgeom(n*m, 0.5), ncol = m, dimnames = list(NULL, Znames))
+X_loc <- matrix(round(runif(2*n, 40, 42), 0), ncol = 2)
+Z_loc <- matrix(round(runif(2*n, 40, 42), 0), ncol = 2)
 est_data <- prep_data(X, Z, wgt =  w, sim.factor = 5, seed = 4)
 #merge with distance
 x_loc <- X_loc[est_data$worker_id,]

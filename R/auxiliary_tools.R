@@ -173,3 +173,15 @@ expand_matrix <- function(df){
   df <- model.matrix( ~ .-1, data = df, contrasts.arg = contrasts_arg)
   return(df)
 }
+
+
+#cbind that can handle empty data frames
+cbind_null <- function(df1, df2){
+  if(is.null(df1)){
+    return(df2)
+  } else if(is.null(df2)){
+    return(df1)
+  } else {
+    return(cbind(df1, df2))
+  }
+}
