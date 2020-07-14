@@ -4,10 +4,20 @@
 \alias{OOI}
 \title{Outside Option Index}
 \usage{
-OOI(formula = NULL, X, Z = NULL, X.location = NULL,
-  Z.location = NULL, wgt = rep(1, nrow(X)), pred = T,
-  method = "logit", sim.factor = 1, dist.fun = geo_dist,
-  dist.order = 2, seed = runif(1, 0, .Machine$integer.max))
+OOI(
+  formula = NULL,
+  X,
+  Z = NULL,
+  X.location = NULL,
+  Z.location = NULL,
+  wgt = rep(1, nrow(X)),
+  pred = T,
+  method = "logit",
+  sim.factor = 1,
+  dist.fun = geo_dist,
+  dist.order = 2,
+  seed = runif(1, 0, .Machine$integer.max)
+)
 }
 \arguments{
 \item{formula}{a formula describing the model to be fitted in order to
@@ -50,7 +60,7 @@ for data with geo-coordinates.}
 an object of class "ooi". This object is a list containing
 the following components:
  \item{coeffs}{coefficients from the estimated logit.}
- \item{coeffs_sd}{coefficients standard deviation.}
+ \item{coeffs_sd}{coefficients SE.}
  \item{pseudo_r2}{McFadden's pseudo-R squared for the estimated logit.}
  \item{standardized_coeffs}{standardized coefficients.}
  \item{ooi}{the outside option index.}

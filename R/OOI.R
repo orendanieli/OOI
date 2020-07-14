@@ -116,12 +116,13 @@ OOI <- function(formula = NULL,
 #'  and/or new data.
 #'
 #' @param object an ooi object.
-#' @param new.coef new vector of coefficients
-#' @param new.X new X matrix / data frame.
-#' @param new.Z new Z matrix / data frame.
-#' @param new.X.location new X.location matrix / data frame.
-#' @param new.Z.location new Z.location matrix / data frame.
-#' @param new.wgt new vector of weights
+#' @param new.coef a new *named* vector of coefficients. check the coefficients produced by
+#'                 the main function to see the right format for this vector.
+#' @param new.X a new X matrix / data frame.
+#' @param new.Z a new Z matrix / data frame.
+#' @param new.X.location a new X.location matrix / data frame.
+#' @param new.Z.location a new Z.location matrix / data frame.
+#' @param new.wgt a new vector of weights
 #'
 #' @return if there are no new arguments, returns the original ooi. otherwise,
 #' returns a vector of ooi calculated using the new arguments.
@@ -140,7 +141,7 @@ predict.ooi <- function(object,
   } else {
     #prepare inputs
     x <- object$orig_arg
-    coeffs <- if(is.null(new.coef)) output$coeffs else new.coef
+    coeffs <- if(is.null(new.coef)) object$coeffs else new.coef
     X <- if(is.null(new.X)) x$X else new.X
     Z <- if(is.null(new.Z)) x$Z else new.Z
     X.location <- if(is.null(new.X.location)) x$X.location else new.X.location

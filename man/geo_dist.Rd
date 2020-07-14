@@ -2,7 +2,7 @@
 % Please edit documentation in R/auxiliary_tools.R
 \name{geo_dist}
 \alias{geo_dist}
-\title{Geograp}
+\title{Geographical distance}
 \usage{
 geo_dist(x.loc, z.loc)
 }

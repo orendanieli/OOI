@@ -4,24 +4,31 @@
 \alias{predict.ooi}
 \title{Predict Outside Option Index}
 \usage{
-\method{predict}{ooi}(object, new.coef = NULL, new.X = NULL,
-  new.Z = NULL, new.X.location = NULL, new.Z.location = NULL,
-  new.wgt = NULL)
+\method{predict}{ooi}(
+  object,
+  new.coef = NULL,
+  new.X = NULL,
+  new.Z = NULL,
+  new.X.location = NULL,
+  new.Z.location = NULL,
+  new.wgt = NULL
+)
 }
 \arguments{
 \item{object}{an ooi object.}
 
-\item{new.coef}{new vector of coefficients}
+\item{new.coef}{a new *named* vector of coefficients. check the coefficients produced by
+the main function to see the right format for this vector.}
 
-\item{new.X}{new X matrix / data frame.}
+\item{new.X}{a new X matrix / data frame.}
 
-\item{new.Z}{new Z matrix / data frame.}
+\item{new.Z}{a new Z matrix / data frame.}
 
-\item{new.X.location}{new X.location matrix / data frame.}
+\item{new.X.location}{a new X.location matrix / data frame.}
 
-\item{new.Z.location}{new Z.location matrix / data frame.}
+\item{new.Z.location}{a new Z.location matrix / data frame.}
 
-\item{new.wgt}{new vector of weights}
+\item{new.wgt}{a new vector of weights}
 }
 \value{
 if there are no new arguments, returns the original ooi. otherwise,
