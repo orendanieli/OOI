@@ -94,11 +94,12 @@ OOI <- function(formula = NULL,
                     wgt = wgt,
                     dist.fun = dist.fun,
                     dist.order = dist.order)
-  output <- list(coeffs = round(coeffs, 4),
+  output <- list(coeffs = coeffs,
                  coeffs_se = coeffs_se,
                  pseudo_r2 = pseudo_r2,
                  standardized_coeffs = stand_coeffs,
-                 orig_arg = orig_arg)
+                 orig_arg = orig_arg,
+                 formula = formula)
   #predict OOI
   if(pred){
     ooi <- predict_ooi(coef_matrices, X, Z, X.location, Z.location,
