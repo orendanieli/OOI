@@ -21,7 +21,7 @@ test_that("OOI returns correct output", {
   #define simple distance function
   dis_function <- function(x, y){abs(x - y)}
   ooi_obj <- suppressWarnings(OOI(~ x_ * d, X = X, X.location = X_loc, Z.location = Z_loc,
-                 dist.fun = dis_function, dist.order = 1, sim.factor = 3))
+                 dist.fun = dis_function, dist.order = 1, sim.factor = 1))
   ooi <- ooi_obj$ooi
   #choose workers who are far enough from the edges
   q25 <- quantile(X_loc[,1], probs = 0.25)

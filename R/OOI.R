@@ -165,6 +165,7 @@ predict.ooi <- function(object,
 #' @param prefix a prefix to be added
 #'
 #' @return matrix / data.frame with new column names.
+#' @export
 add_prefix <- function(df, prefix){
   col_names <- colnames(df)
   col_names <- paste0(prefix, col_names)

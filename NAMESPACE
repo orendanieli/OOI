@@ -2,3 +2,4 @@
 
 S3method(predict,ooi)
 export(OOI)
+export(add_prefix)
