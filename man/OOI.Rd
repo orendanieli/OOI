@@ -64,6 +64,7 @@ the following components:
  \item{pseudo_r2}{McFadden's pseudo-R squared for the estimated logit.}
  \item{standardized_coeffs}{standardized coefficients.}
  \item{ooi}{the outside option index.}
+ \item{job_worker_prob}{probabilities of each worker to work at his job}
  \item{orig_arg}{a list containing the original arguments (necessary
  for \code{\link{predict.ooi}}).}
 }

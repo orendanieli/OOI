@@ -185,3 +185,19 @@ cbind_null <- function(df1, df2){
     return(cbind(df1, df2))
   }
 }
+
+#extract the probability of each worker to work at his job from the estimated logit model
+#logit - a logit model (object)
+#indices - indices of the original data (and not the simulated). logical
+get_probs <- function(logit, indices, wgt){
+  wgt <- wgt / sum(wgt)
+  logp <- predict(logit)[indices]
+  p <- exp(logp)
+  p <- p * wgt
+  p <- p / sum(p)
+  return(p)
+}
+
+
+
+

@@ -36,6 +36,7 @@
 #'  \item{pseudo_r2}{McFadden's pseudo-R squared for the estimated logit.}
 #'  \item{standardized_coeffs}{standardized coefficients.}
 #'  \item{ooi}{the outside option index.}
+#'  \item{job_worker_prob}{probabilities of each worker to work at his job}
 #'  \item{orig_arg}{a list containing the original arguments (necessary
 #'  for \code{\link{predict.ooi}}).}
 
@@ -79,6 +80,7 @@ OOI <- function(formula = NULL,
                   "Replacing NA coefficients with 0"))
     coeffs <- replace(coeffs, is.na(coeffs), 0)
   }
+  job_worker_prob <- get_probs(logit, est_data$y == 1, wgt)
   coeffs_se <- round(sqrt(diag(vcov(logit))), 4)
   pseudo_r2 <- round(1 - (logit$deviance / logit$null.deviance), 3)
   #calculate standardized coefficients
@@ -97,6 +99,7 @@ OOI <- function(formula = NULL,
                  pseudo_r2 = pseudo_r2,
                  standardized_coeffs = stand_coeffs,
                  orig_arg = orig_arg,
+                 job_worker_prob = job_worker_prob,
                  formula = formula)
   #predict OOI
   if(pred){
