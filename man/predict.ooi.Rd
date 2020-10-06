@@ -11,7 +11,8 @@
   new.Z = NULL,
   new.X.location = NULL,
   new.Z.location = NULL,
-  new.wgt = NULL
+  new.wgt = NULL,
+  hhi = F
 )
 }
 \arguments{
@@ -29,12 +30,16 @@ the main function to see the right format for this vector.}
 \item{new.Z.location}{a new Z.location matrix / data frame.}
 
 \item{new.wgt}{a new vector of weights}
+
+\item{hhi}{whether to calculate the HHI (Herfindahl-Hirschman Index) instead of the OOI.
+default is FALSE.}
 }
 \value{
-if there are no new arguments, returns the original ooi. otherwise,
-returns a vector of ooi calculated using the new arguments.
+if there are no new arguments and hhi = FALSE, returns the original ooi. otherwise,
+returns a vector of ooi/hhi calculated using the new/original arguments.
 }
 \description{
-predicts OOI for new coefficients (for counterfactual analysis)
- and/or new data.
+predicts the OOI for new coefficients (for counterfactual analysis)
+and/or new data. In addition, the HHI (Herfindahl-Hirschman Index) can be predicted instead
+of the OOI.
 }

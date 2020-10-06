@@ -41,7 +41,7 @@ worker and job using 'dist.fun'.}
 
 \item{wgt}{an optional numeric vector of weights.}
 
-\item{pred}{logical. If TRUE (default), predicts ooi for the provided data.}
+\item{pred}{logical. If TRUE (default), predicts the ooi for the provided data.}
 
 \item{method}{a method for estimating P(Z|X) / P(Z). currently not in use.}
 

@@ -6,7 +6,7 @@ set.seed(123)
 
 test_that("OOI returns correct output", {
   #simulate data
-  n <- 1000
+  n <- 2000
   men <- rbinom(n, 1, 0.5)
   X_loc <- matrix(runif(n, 0, 100), ncol = 1)
   dist <- rep(NA, n)
@@ -24,8 +24,8 @@ test_that("OOI returns correct output", {
                  dist.fun = dis_function, dist.order = 1, sim.factor = 1))
   ooi <- ooi_obj$ooi
   #choose workers who are far enough from the edges
-  q25 <- quantile(X_loc[,1], probs = 0.25)
-  q75 <- quantile(X_loc[,1], probs = 0.75)
+  q25 <- quantile(X_loc[,1], probs = 0.3)
+  q75 <- quantile(X_loc[,1], probs = 0.7)
   central <- (X_loc[,1] > q25) & (X_loc[,1] < q75)
   ooi_men <- ooi[men_inc & central]
   ooi_women <- ooi[!men_inc & central]

@@ -19,7 +19,7 @@
 #'                   worker and job using 'dist.fun'.
 #' @param Z.location same as 'X.location' but for jobs.
 #' @param wgt an optional numeric vector of weights.
-#' @param pred logical. If TRUE (default), predicts ooi for the provided data.
+#' @param pred logical. If TRUE (default), predicts the ooi for the provided data.
 #' @param method a method for estimating P(Z|X) / P(Z). currently not in use.
 #' @param sim.factor a variable that determines how much fake data to simulate
 #'                   (relative to real data).
@@ -84,8 +84,6 @@ OOI <- function(formula = NULL,
   #calculate standardized coefficients
   est_data <- expand_matrix(est_data[est_data$y == 1,])
   stand_coeffs <- standardize(coeffs[-1], est_data, wgt)
-  #reshape coefficients (necessary for prediction)
-  coef_matrices <- coef_reshape(coeffs)
   #prepare output
   orig_arg <- list(X = X,
                     Z = Z,
@@ -102,8 +100,10 @@ OOI <- function(formula = NULL,
                  formula = formula)
   #predict OOI
   if(pred){
+    #reshape coefficients (necessary for prediction)
+    coef_matrices <- coef_reshape(coeffs)
     ooi <- predict_ooi(coef_matrices, X, Z, X.location, Z.location,
-                       wgt, dist.fun, dist.order)
+                       wgt, dist.fun, dist.order, F)
     output[["ooi"]] <- ooi
   }
   class(output) <- "ooi"
@@ -113,8 +113,9 @@ OOI <- function(formula = NULL,
 
 #' Predict Outside Option Index
 #'
-#' predicts OOI for new coefficients (for counterfactual analysis)
-#'  and/or new data.
+#' predicts the OOI for new coefficients (for counterfactual analysis)
+#' and/or new data. In addition, the HHI (Herfindahl-Hirschman Index) can be predicted instead
+#' of the OOI.
 #'
 #' @param object an ooi object.
 #' @param new.coef a new *named* vector of coefficients. check the coefficients produced by
@@ -124,9 +125,11 @@ OOI <- function(formula = NULL,
 #' @param new.X.location a new X.location matrix / data frame.
 #' @param new.Z.location a new Z.location matrix / data frame.
 #' @param new.wgt a new vector of weights
+#' @param hhi whether to calculate the HHI (Herfindahl-Hirschman Index) instead of the OOI.
+#'            default is FALSE.
 #'
-#' @return if there are no new arguments, returns the original ooi. otherwise,
-#' returns a vector of ooi calculated using the new arguments.
+#' @return if there are no new arguments and hhi = FALSE, returns the original ooi. otherwise,
+#' returns a vector of ooi/hhi calculated using the new/original arguments.
 #' @export
 #add example
 predict.ooi <- function(object,
@@ -135,9 +138,10 @@ predict.ooi <- function(object,
                         new.Z = NULL,
                         new.X.location = NULL,
                         new.Z.location = NULL,
-                        new.wgt = NULL){
+                        new.wgt = NULL,
+                        hhi = F){
   #if there are no new inputs, return pre-computed ooi.
-  if(is.null(new.coef) & is.null(new.X) & is.null(new.Z)){
+  if(is.null(new.coef) & is.null(new.X) & is.null(new.Z) & !hhi){
     return(object$ooi)
   } else {
     #prepare inputs
@@ -152,7 +156,7 @@ predict.ooi <- function(object,
     coef_matrices <- coef_reshape(coeffs)
     #predict OOI
     ooi <- predict_ooi(coef_matrices, X, Z, X.location, Z.location,
-                       wgt, x$dist.fun, x$dist.order)
+                       wgt, x$dist.fun, x$dist.order, hhi)
     return(ooi)
   }
 }

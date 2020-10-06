@@ -165,7 +165,7 @@ expand_matrix <- function(df){
   }
   factors_ind <- sapply(df, is.factor)
   if(sum(factors_ind) == 0){
-    return(df)
+    return(as.matrix(df))
   }
   contrasts_arg <- lapply(data.frame(df[,factors_ind]),
                           contrasts, contrasts = FALSE)
