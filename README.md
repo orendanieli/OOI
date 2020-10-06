@@ -24,7 +24,7 @@ library(OOI)
 n <- 1000
 men <- rbinom(n, 1, 0.5)
 size <- 1 + rgeom(n, 0.1) 
-size[men == 0] <- size + 2
+size[men == 0] <- size[men == 0] + 2
 worker_resid <- matrix(round(runif(n, 0, 20), 1), ncol = 1)
 job_location <- matrix(round(runif(n, 20, 40), 1), ncol = 1)
 #prepare data
