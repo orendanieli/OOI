@@ -250,7 +250,7 @@ calc_ooi <- function(logp, wgt, hhi = F){
   sum_p <- as.vector(p %*% one)
   p <- p / sum_p
   if(hhi){
-    hhi <- -p^2 %*% one
+    hhi <- p^2 %*% one
     return(hhi)
   }
   logp <- logp - log(sum_p)
