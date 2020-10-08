@@ -12,7 +12,8 @@
   new.X.location = NULL,
   new.Z.location = NULL,
   new.wgt = NULL,
-  hhi = F
+  hhi = F,
+  both = F
 )
 }
 \arguments{
@@ -33,10 +34,13 @@ the main function to see the right format for this vector.}
 
 \item{hhi}{whether to predict the HHI (Herfindahl-Hirschman Index, an alternative measure for
 outside options) instead of the OOI. default is FALSE.}
+
+\item{both}{whether to return a list with both HHI and OOI when suppling new inputs (default is FALSE).
+necessary especially when predicting takes a lot of time.}
 }
 \value{
-if there are no new arguments, returns the original results. otherwise,
-        returns a vector of ooi/hhi calculated using the new arguments.
+if there are no new arguments, returns the original results (ooi/hhi). otherwise,
+        returns a vector of ooi/hhi (or a list of both) calculated using the new arguments.
 }
 \description{
 predicts the OOI for new coefficients (for counterfactual analysis)

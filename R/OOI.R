@@ -131,9 +131,11 @@ OOI <- function(formula = NULL,
 #' @param new.wgt a new vector of weights
 #' @param hhi whether to predict the HHI (Herfindahl-Hirschman Index, an alternative measure for
 #'            outside options) instead of the OOI. default is FALSE.
+#' @param both whether to return a list with both HHI and OOI when suppling new inputs (default is FALSE).
+#'             necessary especially when predicting takes a lot of time.
 #'
-#' @return if there are no new arguments, returns the original results. otherwise,
-#'         returns a vector of ooi/hhi calculated using the new arguments.
+#' @return if there are no new arguments, returns the original results (ooi/hhi). otherwise,
+#'         returns a vector of ooi/hhi (or a list of both) calculated using the new arguments.
 #' @export
 #add example
 predict.ooi <- function(object,
@@ -143,7 +145,8 @@ predict.ooi <- function(object,
                         new.X.location = NULL,
                         new.Z.location = NULL,
                         new.wgt = NULL,
-                        hhi = F){
+                        hhi = F,
+                        both = F){
   #if there are no new inputs, return pre-computed results.
   new_inp <- list(new.coef, new.X, new.Z, new.X.location,
                   new.Z.location, new.wgt)
@@ -163,7 +166,11 @@ predict.ooi <- function(object,
     #predict OOI
     tmp <- predict_ooi(coef_matrices, X, Z, X.location, Z.location,
                        wgt, x$dist.fun, x$dist.order)
-    if(hhi) tmp$hhi else tmp$ooi
+    if(both){
+      tmp
+    } else {
+      if(hhi) tmp$hhi else tmp$ooi
+    }
   }
 }
 
