@@ -63,7 +63,8 @@ the following components:
  \item{coeffs_sd}{coefficients SE.}
  \item{pseudo_r2}{McFadden's pseudo-R squared for the estimated logit.}
  \item{standardized_coeffs}{standardized coefficients.}
- \item{ooi}{the outside option index.}
+ \item{ooi}{the Outside Option Index.}
+ \item{hhi}{the Herfindahl-Hirschman Index, an alternative measure for outside options.}
  \item{job_worker_prob}{probabilities of each worker to work at his job}
  \item{orig_arg}{a list containing the original arguments (necessary
  for \code{\link{predict.ooi}}).}

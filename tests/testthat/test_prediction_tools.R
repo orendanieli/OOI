@@ -40,7 +40,7 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_ * z_ 
                data = est_data, weights = est_data$w))
   coeffs <- logit$coefficients
   coef_matrices <- coef_reshape(coeffs)
-  ooi_package <- predict_ooi(coef_matrices, X, Z, X_loc, Z_loc, wgt = w)
+  ooi_package <- predict_ooi(coef_matrices, X, Z, X_loc, Z_loc, wgt = w)$ooi
   ooi_predict <- c()
   #calc ooi for each worker with predict
   for(i in 1:n){
@@ -51,7 +51,7 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_ * z_ 
     df <- cbind.data.frame(Xi, Z, D)
     f <- t(as.matrix(predict(logit, newdata = df)))
     w <- w / sum(w)
-    ooi_predict <- c(ooi_predict, calc_ooi(f, w))
+    ooi_predict <- c(ooi_predict, calc_ooi(f, w)$ooi)
   }
   expect_true(max(abs(ooi_predict - ooi_package)) < 0.001)
 })
@@ -64,7 +64,7 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_*z_ + 
                                 data = est_data, weights = est_data$w))
   coeffs <- logit$coefficients
   coef_matrices <- coef_reshape(coeffs)
-  ooi_package <- predict_ooi(coef_matrices, X, Z, X_loc, Z_loc, wgt = w)
+  ooi_package <- predict_ooi(coef_matrices, X, Z, X_loc, Z_loc, wgt = w)$ooi
   ooi_predict <- c()
   #calc ooi for each worker with predict
   for(i in 1:n){
@@ -75,7 +75,7 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_*z_ + 
     df <- cbind.data.frame(Xi, Z, D)
     f <- t(as.matrix(predict(logit, newdata = df)))
     w <- w / sum(w)
-    ooi_predict <- c(ooi_predict, calc_ooi(f, w))
+    ooi_predict <- c(ooi_predict, calc_ooi(f, w)$ooi)
   }
   expect_true(max(abs(ooi_predict - ooi_package)) < 0.001)
 })
@@ -88,7 +88,7 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_*z_ + 
                                 data = est_data, weights = est_data$w))
   coeffs <- logit$coefficients
   coef_matrices <- coef_reshape(coeffs)
-  ooi_package <- predict_ooi(coef_matrices, X, Z, X_loc, Z_loc, wgt = w)
+  ooi_package <- predict_ooi(coef_matrices, X, Z, X_loc, Z_loc, wgt = w)$ooi
   ooi_predict <- c()
   #calc ooi for each worker with predict
   for(i in 1:n){
@@ -99,7 +99,7 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_*z_ + 
     df <- cbind.data.frame(Xi, Z, D)
     f <- t(as.matrix(predict(logit, newdata = df)))
     w <- w / sum(w)
-    ooi_predict <- c(ooi_predict, calc_ooi(f, w))
+    ooi_predict <- c(ooi_predict, calc_ooi(f, w)$ooi)
   }
   expect_true(max(abs(ooi_predict - ooi_package)) < 0.001)
 })
@@ -112,7 +112,7 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_ * d",
                                 data = est_data, weights = est_data$w))
   coeffs <- logit$coefficients
   coef_matrices <- coef_reshape(coeffs)
-  ooi_package <- predict_ooi(coef_matrices, X, Z, X_loc, Z_loc, wgt = w)
+  ooi_package <- predict_ooi(coef_matrices, X, Z, X_loc, Z_loc, wgt = w)$ooi
   ooi_predict <- c()
   #calc ooi for each worker with predict
   for(i in 1:n){
@@ -123,7 +123,7 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_ * d",
     df <- cbind.data.frame(Xi, Z, D)
     f <- t(as.matrix(predict(logit, newdata = df)))
     w <- w / sum(w)
-    ooi_predict <- c(ooi_predict, calc_ooi(f, w))
+    ooi_predict <- c(ooi_predict, calc_ooi(f, w)$ooi)
   }
   expect_true(max(abs(ooi_predict - ooi_package)) < 0.001)
 })
@@ -136,7 +136,7 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_ + z_ 
                                 data = est_data, weights = est_data$w))
   coeffs <- logit$coefficients
   coef_matrices <- coef_reshape(coeffs)
-  ooi_package <- predict_ooi(coef_matrices, X, Z, X_loc, Z_loc, wgt = w)
+  ooi_package <- predict_ooi(coef_matrices, X, Z, X_loc, Z_loc, wgt = w)$ooi
   ooi_predict <- c()
   #calc ooi for each worker with predict
   for(i in 1:n){
@@ -147,7 +147,7 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_ + z_ 
     df <- cbind.data.frame(Xi, Z, D)
     f <- t(as.matrix(predict(logit, newdata = df)))
     w <- w / sum(w)
-    ooi_predict <- c(ooi_predict, calc_ooi(f, w))
+    ooi_predict <- c(ooi_predict, calc_ooi(f, w)$ooi)
   }
   expect_true(max(abs(ooi_predict - ooi_package)) < 0.001)
 })
@@ -160,7 +160,7 @@ test_that("predict_ooi returns the same results as predict; formula = ~ z_ + d",
                                 data = est_data, weights = est_data$w))
   coeffs <- logit$coefficients
   coef_matrices <- coef_reshape(coeffs)
-  ooi_package <- predict_ooi(coef_matrices, X, Z, X_loc, Z_loc, wgt = w)
+  ooi_package <- predict_ooi(coef_matrices, X, Z, X_loc, Z_loc, wgt = w)$ooi
   ooi_predict <- c()
   #calc ooi for each worker with predict
   for(i in 1:n){
@@ -171,7 +171,7 @@ test_that("predict_ooi returns the same results as predict; formula = ~ z_ + d",
     df <- cbind.data.frame(Xi, Z, D)
     f <- t(as.matrix(predict(logit, newdata = df)))
     w <- w / sum(w)
-    ooi_predict <- c(ooi_predict, calc_ooi(f, w))
+    ooi_predict <- c(ooi_predict, calc_ooi(f, w)$ooi)
   }
   expect_true(max(abs(ooi_predict - ooi_package)) < 0.001)
 })
@@ -184,7 +184,7 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_ + d",
                                 data = est_data, weights = est_data$w))
   coeffs <- logit$coefficients
   coef_matrices <- coef_reshape(coeffs)
-  ooi_package <- predict_ooi(coef_matrices, X, Z, X_loc, Z_loc, wgt = w)
+  ooi_package <- predict_ooi(coef_matrices, X, Z, X_loc, Z_loc, wgt = w)$ooi
   ooi_predict <- c()
   #calc ooi for each worker with predict
   for(i in 1:n){
@@ -195,7 +195,7 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_ + d",
     df <- cbind.data.frame(Xi, Z, D)
     f <- t(as.matrix(predict(logit, newdata = df)))
     w <- w / sum(w)
-    ooi_predict <- c(ooi_predict, calc_ooi(f, w))
+    ooi_predict <- c(ooi_predict, calc_ooi(f, w)$ooi)
   }
   expect_true(max(abs(ooi_predict - ooi_package)) < 0.001)
 })

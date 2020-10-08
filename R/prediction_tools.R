@@ -87,8 +87,7 @@ predict_ooi <- function(coef.mat, X,
                         Z.location = NULL,
                         wgt = rep(1, nrow(X)),
                         dist.fun = geo_dist,
-                        dist.order = 2,
-                        hhi = F) {
+                        dist.order = 2) {
   #data binning, to speed up prediction
   full_X <- cbind_null(X, X.location)
   tmp <- bin_data(full_X)
@@ -141,7 +140,9 @@ predict_ooi <- function(coef.mat, X,
     for(i in districts){
       workers <- dis_table$worker[dis_table$dis == i]
       logp <- X1[workers,] %*% A1_Z1
-      dis_table$ooi[dis_table$dis == i] <- calc_ooi(logp, wgt, hhi)
+      tmp <- calc_ooi(logp, wgt)
+      dis_table$ooi[dis_table$dis == i] <- tmp$ooi
+      dis_table$hhi[dis_table$dis == i] <- tmp$hhi
       #print and update progress
       setTxtProgressBar(pb,stepi)
       stepi <- stepi + 1
@@ -175,7 +176,9 @@ predict_ooi <- function(coef.mat, X,
           A1_Z1i["cons",] <- A1_Z1i["cons", ] + DpZ3 %*% A3[p, ]
         }
         logp <- Xi %*% rbind(A1_Z1i, t(D))
-        dis_table$ooi[dis_table$dis == i] <- calc_ooi(logp, wgt, hhi)
+        tmp <- calc_ooi(logp, wgt)
+        dis_table$ooi[dis_table$dis == i] <- tmp$ooi
+        dis_table$hhi[dis_table$dis == i] <- tmp$hhi
         #print and update progress
         setTxtProgressBar(pb,stepi)
         stepi <- stepi + 1
@@ -186,7 +189,9 @@ predict_ooi <- function(coef.mat, X,
         Xi <- X[workers,]
         D <- gen_dist_mat(workers, X.location, Z.location, dist.fun, dist.order)
         logp <- Xi %*% rbind(A1_Z1, t(D))
-        dis_table$ooi[dis_table$dis == i] <- calc_ooi(logp, wgt, hhi)
+        tmp <- calc_ooi(logp, wgt)
+        dis_table$ooi[dis_table$dis == i] <- tmp$ooi
+        dis_table$hhi[dis_table$dis == i] <- tmp$hhi
         #print and update progress
         setTxtProgressBar(pb,stepi)
         stepi <- stepi + 1
@@ -203,7 +208,9 @@ predict_ooi <- function(coef.mat, X,
         }
         A1_Z1i["cons",] <- A1_Z1i["cons",] + D %*% B2
         logp <- Xi %*% A1_Z1i
-        dis_table$ooi[dis_table$dis == i] <- calc_ooi(logp, wgt, hhi)
+        tmp <- calc_ooi(logp, wgt)
+        dis_table$ooi[dis_table$dis == i] <- tmp$ooi
+        dis_table$hhi[dis_table$dis == i] <- tmp$hhi
         #print and update progress
         setTxtProgressBar(pb,stepi)
         stepi <- stepi + 1
@@ -221,7 +228,9 @@ predict_ooi <- function(coef.mat, X,
           A1_Z1i["cons",] <- A1_Z1i["cons",] + D %*% B2
         }
         logp <- Xi %*% A1_Z1i
-        dis_table$ooi[dis_table$dis == i] <- calc_ooi(logp, wgt, hhi)
+        tmp <- calc_ooi(logp, wgt)
+        dis_table$ooi[dis_table$dis == i] <- tmp$ooi
+        dis_table$hhi[dis_table$dis == i] <- tmp$hhi
         #print and update progress
         setTxtProgressBar(pb,stepi)
         stepi <- stepi + 1
@@ -232,7 +241,7 @@ predict_ooi <- function(coef.mat, X,
   dis_table$binX <- binX
   res <- merge(x = res, y = dis_table, by = "binX", all.x = T)
   res <- res[order(res$id), , drop = F] #keep the original order
-  return(res$ooi)
+  return(list(ooi = res$ooi, hhi = res$hhi))
 }
 
 #calculates ooi from predicted log(P(Z|X) / P(Z)).
@@ -241,7 +250,7 @@ predict_ooi <- function(coef.mat, X,
 #P(Z) are just wgt (normalized to sum to 1).
 #the last step is to normalize P(Z|X) to sum to 1.
 
-calc_ooi <- function(logp, wgt, hhi = F){
+calc_ooi <- function(logp, wgt){
   wgt <- wgt / sum(wgt)
   one <- rep(1, length(wgt))
   p <- exp(logp)
@@ -249,14 +258,11 @@ calc_ooi <- function(logp, wgt, hhi = F){
   #now p is actually P(Z|X), and we to normalize it to sum to 1 for each worker.
   sum_p <- as.vector(p %*% one)
   p <- p / sum_p
-  if(hhi){
-    hhi <- p^2 %*% one
-    return(hhi)
-  }
   logp <- logp - log(sum_p)
-  #Sum and get index
+  #Sum and get the indices
   ooi <- -(p * logp) %*% one
-  return(ooi)
+  hhi <- p^2 %*% one
+  return(list(ooi = ooi, hhi = hhi))
 }
 
 #preforms grouping on X.loc and returns district table. if X.loc is missing, generates
@@ -265,11 +271,11 @@ gen_dist <- function(X.loc = NULL, n){
   if(is.null(X.loc)){
     n_dis <- max(round(n / 50), 2)
     dis <- cut(1:n, n_dis, labels = as.character(1:n_dis))
-    dis_table <- cbind.data.frame(worker = 1:n, dis = dis, ooi = rep(NA, n))
   } else {
     dis <- apply(X.loc, 1, paste0, collapse = "_")
-    dis_table <- cbind.data.frame(worker = 1:n, dis = dis, ooi = rep(NA, n))
   }
+  dis_table <- cbind.data.frame(worker = 1:n, dis = dis,
+                                ooi = rep(NA, n), hhi = rep(NA, n))
   return(dis_table)
 }
 

@@ -31,15 +31,14 @@ the main function to see the right format for this vector.}
 
 \item{new.wgt}{a new vector of weights}
 
-\item{hhi}{whether to calculate the HHI (Herfindahl-Hirschman Index) instead of the OOI.
-default is FALSE.}
+\item{hhi}{whether to predict the HHI (Herfindahl-Hirschman Index, an alternative measure for
+outside options) instead of the OOI. default is FALSE.}
 }
 \value{
-if there are no new arguments and hhi = FALSE, returns the original ooi. otherwise,
-returns a vector of ooi/hhi calculated using the new/original arguments.
+if there are no new arguments, returns the original results. otherwise,
+        returns a vector of ooi/hhi calculated using the new arguments.
 }
 \description{
 predicts the OOI for new coefficients (for counterfactual analysis)
-and/or new data. In addition, the HHI (Herfindahl-Hirschman Index) can be predicted instead
-of the OOI.
+and/or new data.
 }
