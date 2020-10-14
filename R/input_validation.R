@@ -1,4 +1,4 @@
-validate_input <- function(formula, X, Z, X.location, Z.location, wgt){
+validate_input <- function(X, Z, X.location, Z.location, wgt){
   if(is.null(Z) & is.null(X.location) & is.null(Z.location)){
     stop("Z or locations are needed")
   }
@@ -19,6 +19,9 @@ validate_input <- function(formula, X, Z, X.location, Z.location, wgt){
                "with the same number of examples as X.",
                "missing values aren't allowed"))
   }
+}
+
+validate_formula <- function(formula, Z, X.location){
   #validate formula
   if(is.null(formula)){
     if(is.null(Z)){

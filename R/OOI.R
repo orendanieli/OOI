@@ -55,7 +55,8 @@ OOI <- function(formula = NULL,
                 dist.fun = geo_dist,
                 dist.order = 2,
                 seed = runif(1, 0, .Machine$integer.max)){
-  formula <- validate_input(formula, X, Z, X.location, Z.location, wgt)
+  validate_input(X, Z, X.location, Z.location, wgt)
+  formula <- validate_formula(formula, Z, X.location)
   #prepare formula for estimation
   var_names <- c(colnames(X), colnames(Z))
   formula <- prep_form(formula, var_names, dist.order)
@@ -164,6 +165,7 @@ predict.ooi <- function(object,
     #reshape coefficients (necessary for prediction)
     coef_matrices <- coef_reshape(coeffs)
     #predict OOI
+    validate_input(X, Z, X.location, Z.location, wgt)
     tmp <- predict_ooi(coef_matrices, X, Z, X.location, Z.location,
                        wgt, x$dist.fun, x$dist.order)
     if(both){
