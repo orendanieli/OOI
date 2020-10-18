@@ -194,8 +194,10 @@ get_probs <- function(logit, indices, wgt){
   logp <- predict(logit)[indices]
   p <- exp(logp)
   p <- p * wgt
-  p <- p / sum(p)
-  return(p)
+  sum_over_p <- sum(p)
+  #normalize p to sum to 1
+  logp <- logp - log(sum_over_p)
+  return(logp)
 }
 
 
