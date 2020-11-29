@@ -15,7 +15,7 @@ OOI(
   method = "logit",
   sim.factor = 1,
   dist.fun = geo_dist,
-  dist.order = 2,
+  dist.order = NULL,
   seed = runif(1, 0, .Machine$integer.max)
 )
 }
@@ -49,10 +49,14 @@ worker and job using 'dist.fun'.}
 (relative to real data).}
 
 \item{dist.fun}{a distance function to calculate the distance between X.location and
-Z.location. The default function \code{\link{geo_dist}} is suitable
+Z.location. Users interested in using more than one distance metric
+should provide a function that returns for each row of X.location and
+Z.location a vector with all the necessary metrics.
+The default function is \code{\link{geo_dist}}, which suitable
 for data with geo-coordinates.}
 
-\item{dist.order}{the order of the distance polynomial.}
+\item{dist.order}{a numeric vector specifying for each distance metric
+an order of the distance polynomial.}
 
 \item{seed}{the seed of the random number generator.}
 }

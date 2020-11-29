@@ -281,7 +281,7 @@ gen_dist <- function(X.loc = NULL, n){
 
 #generates distance matrix for workers from the same district
 gen_dist_mat <- function(workers, X.location, Z.location,
-                         dist.fun = geo_dist, dist.order = 2){
+                         dist.fun = geo_dist, dist.order){
   X_loc <- unique(X.location[workers,])
   #replicate X_loc to be compatible with calc_dist
   n <- nrow(Z.location)

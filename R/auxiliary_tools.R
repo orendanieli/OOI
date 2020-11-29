@@ -20,23 +20,27 @@ geo_dist <- function(x.loc, z.loc){
 }
 
 #calculates 1:1 distance
-calc_dist <- function(X.location, Z.location, fun = geo_dist, dist.order = 2){
+calc_dist <- function(X.location, Z.location, fun = geo_dist, dist.order){
   nr_X <- nrow(X.location)
   nr_Z <- nrow(Z.location)
   if(nr_X != nr_Z){
     stop("X.location and Z.location should have same number of rows")
   } else {
-    distance <- rep(NA, nr_X)
+    dist_dim <- length(dist.order)
+    distance <- matrix(ncol = dist_dim, nrow = nr_X)
     for(i in 1:nr_X){
-      distance[i] <- fun(X.location[i, ], Z.location[i, ])
+      distance[i,] <- fun(X.location[i, ], Z.location[i, ])
     }
   }
-  distance <- data.frame(d = distance)
+  colnames(distance) <- paste0("d", 1:dist_dim, "1")
+  distance <- as.data.frame(distance)
   #add high order distance
-  if(dist.order > 1){
-    for(i in 2:dist.order){
-      distance$tmp <- distance$d^i
-      colnames(distance)[names(distance) == "tmp"] <- paste("d", i, sep = "")
+  for(i in 1:dist_dim){
+    if(dist.order[i] > 1){
+      for(j in 2:dist.order[i]){
+        distance$tmp <- distance[,paste0("d", i, "1")]^j
+        colnames(distance)[names(distance) == "tmp"] <- paste0("d", i, j)
+      }
     }
   }
   return(distance)
@@ -69,7 +73,7 @@ prep_data <- function(X, Z = NULL, wgt = rep(1, nrow(X)),
 
 #prepares formula for glm
 #this function also validates that without distance, X*Z must be included
-prep_form <- function(formula, var.names, dist.order = 2){
+prep_form <- function(formula, var.names, dist.order){
   terms_labels <- labels(terms(formula))
   n <- length(terms_labels)
   #flag for distance
@@ -114,7 +118,7 @@ div_inter <- function(inter_term){
 
 
 #extracts original variable names from term
-ext_names <- function(term, var.names, dist.order = 2){
+ext_names <- function(term, var.names, dist.order){
   #this term ends with "_"?
   n.char <- nchar(term)
   last_char <- substr(term, n.char, n.char)
@@ -125,11 +129,12 @@ ext_names <- function(term, var.names, dist.order = 2){
     res <- var.names[term_init == names_init]
     #Is this a distance term?
   } else if (term == "d"){
-    dist_terms <- rep(NA, dist.order)
-    for(j in 1:dist.order){
-      dist_terms[j] <- ifelse(j == 1, "d", paste("d", j, sep = ""))
-    }
-    res <- dist_terms
+    #generate d#i#j where i is the i-th distance metric and j is the power
+    dist_dim <- length(dist.order)
+    dist_terms <- paste0("d", 1:dist_dim)
+    res <- apply(cbind(dist_terms, dist.order), 1,
+                        function(x){paste0(x[1], seq(1, x[2], 1))})
+    res <- unlist(res)
   } else {
     res <- term
   }

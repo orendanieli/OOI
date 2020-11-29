@@ -44,6 +44,7 @@ test_that("OOI returns the right job_worker probabilities", {
   p_theo <- 0.5 * men_rate * exp(-dist * men_rate) #men
   p_theo[!men_inc] <- 0.5 * women_rate * exp(-dist[!men_inc] * women_rate) #women
   diff <- abs(p_hat - p_theo)
+  print(summary(diff))
   expect_true(max(diff) < 0.1)
 })
 
@@ -75,4 +76,43 @@ test_that("OOI returns the same results for matrices and data frames with factor
   expect_true(max(abs(mat_results$ooi - df_results$ooi)) < 0.01)
 })
 
+#an auxiliary function that samples from the unit circle
+samp_from_unit <- function(n){
+  t <- 2*pi*runif(n)
+  u <- runif(n) + runif(n)
+  r <- ifelse(u > 1, 2-u, u)
+  res <- data.frame(x = r*cos(t), y = r*sin(t))
+  res
+}
 
+#currently this test doesnt pass
+test_that("OOI returns correct output for multi-dimensional distance", {
+  n <- 10000
+  men_rate <- 2
+  women_rate <- 4
+  men <- rbinom(n, 1, 0.5)
+  #sample workers location from the unit circle
+  X_loc <- samp_from_unit(n)
+  dist <- rep(NA, n)
+  men_inc <- men == 1
+  dist[men_inc] <- rexp(n = sum(men_inc), rate = men_rate) #distance for men
+  dist[!men_inc] <- rexp(n = sum(!men_inc), rate = women_rate) #distance for women
+  angle <- 2*pi*runif(n)
+  Z_loc <- X_loc + cbind(dist*cos(angle), dist*sin(angle))
+  dis_function <- function(x, z){sqrt((x[1] - z[1])^2 + (x[2] - z[2])^2)}
+  X <- matrix(men, ncol = 1, dimnames = list(NULL, "x.men"))
+  ooi_obj <- suppressWarnings(OOI(~ x_ * d, X = X, X.location = X_loc, Z.location = Z_loc,
+                                  dist.fun = dis_function, dist.order = 1, sim.factor = 3))
+  ooi <- ooi_obj$ooi
+  #choose workers who are close enough to th center
+  central <- apply(abs(X_loc) < 0.5, 1, all)
+  ooi_men <- ooi[men_inc & central]
+  ooi_women <- ooi[!men_inc & central]
+  #theoretical results
+  theo_ooi_men <- 1 - log(0.5 * men_rate)
+  theo_ooi_women <- 1 - log(0.5 * women_rate)
+  ooi_men_hat <- mean(ooi_men, na.rm = T)
+  ooi_women_hat <- mean(ooi_women, na.rm = T)
+  expect_true(abs(ooi_men_hat - theo_ooi_men) < 0.1 &
+                abs(ooi_women_hat - theo_ooi_women) < 0.1)
+})

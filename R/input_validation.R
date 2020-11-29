@@ -76,3 +76,20 @@ validate_type <- function(df, df.name, exp.length){
     }
   }
 }
+
+
+validate_dist <- function(d.fun, d.order, x, z){
+  dist_output <- d.fun(x, z)
+  dim_fun <- length(dist_output)
+  if(is.null(d.order)){
+    d.order = rep(1, dim_fun)
+  } else {
+    dim_order <- length(d.order)
+    if(dim_fun != dim_order){
+      stop(paste0("dist.fun returns ", dim_fun,
+                 "-dimensional result, while dist.order is ", dim_order, "-dimensional"))
+    }
+  }
+  return(d.order)
+}
+

@@ -24,9 +24,13 @@
 #' @param sim.factor a variable that determines how much fake data to simulate
 #'                   (relative to real data).
 #' @param dist.fun a distance function to calculate the distance between X.location and
-#'                 Z.location. The default function \code{\link{geo_dist}} is suitable
+#'                 Z.location. Users interested in using more than one distance metric
+#'                 should provide a function that returns for each row of X.location and
+#'                 Z.location a vector with all the necessary metrics.
+#'                 The default function is \code{\link{geo_dist}}, which suitable
 #'                 for data with geo-coordinates.
-#' @param dist.order the order of the distance polynomial.
+#' @param dist.order a numeric vector specifying for each distance metric
+#'                   an order of the distance polynomial.
 #' @param seed the seed of the random number generator.
 #'
 #' @return an object of class "ooi". This object is a list containing
@@ -53,10 +57,14 @@ OOI <- function(formula = NULL,
                 method = "logit",
                 sim.factor = 1,
                 dist.fun = geo_dist,
-                dist.order = 2,
+                dist.order = NULL,
                 seed = runif(1, 0, .Machine$integer.max)){
   validate_input(X, Z, X.location, Z.location, wgt)
   formula <- validate_formula(formula, Z, X.location)
+  if(!is.null(X.location)){
+    dist.order <- validate_dist(dist.fun, dist.order, x = X.location[1, ,drop = F],
+                                z = Z.location[1, ,drop = F])
+  }
   #prepare formula for estimation
   var_names <- c(colnames(X), colnames(Z))
   formula <- prep_form(formula, var_names, dist.order)
@@ -68,9 +76,12 @@ OOI <- function(formula = NULL,
       #rounding is necessary for gen_dist()
       X.location = round(X.location, 3)
     }
+    X.location <- as.matrix(X.location)
+    Z.location <- as.matrix(Z.location)
     x_loc <- X.location[est_data$worker_id, , drop = F]
     z_loc <- Z.location[est_data$job_id, , drop = F]
     D <- calc_dist(x_loc, z_loc, dist.fun, dist.order)
+    print(summary(D[,1]))
     est_data <- cbind(est_data, D)
   }
   #estimate logit

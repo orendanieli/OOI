@@ -19,7 +19,8 @@ w = rexp(n)
 
 
 bla <- OOI(~ x_ * z.1_ + z.2_ + x_*d + z.1_ * d, X = X, Z = Z,
-           X.location = X_loc, Z.location = Z_loc, sim.factor = 1)
+           X.location = X_loc, Z.location = Z_loc, sim.factor = 1, dist.fun = two_dim_function,
+           pred = F, dist.order = c(2, 2))
 ############################
 dif = rep(NA,10)
 for(j in 1:10){
@@ -53,3 +54,18 @@ for(j in 1:10){
   dif[j] = max(abs(mat_results$ooi - df_results$ooi))
 }
 summary(dif)
+
+
+two_dim_function = function(x, z){
+  x = x[1]; z = z[1]
+  c(abs(x-z), (x-z)^2)
+}
+
+calc_dist(X_loc[1:10,], Z_loc[1:10,], fun = two_dim_function, dist.order = c(2, 3))
+
+
+
+
+
+
+

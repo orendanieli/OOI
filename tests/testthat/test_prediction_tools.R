@@ -19,6 +19,7 @@ test_that("coef_reshape returns correct coefficient matrices", {
 n <- 100
 m <- 4
 w <- rexp(n, 0.5)
+dist_order = 2
 Xnames <- paste0("x.", 1:m)
 Znames <- paste0("z.", 1:m)
 X <- matrix(rgeom(n*m, 0.5), ncol = m, dimnames = list(NULL, Xnames))
@@ -29,12 +30,12 @@ est_data <- prep_data(X, Z, wgt =  w, sim.factor = 5, seed = 4)
 #merge with distance
 x_loc <- X_loc[est_data$worker_id,]
 z_loc <- Z_loc[est_data$job_id,]
-D <- calc_dist(x_loc, z_loc)
+D <- calc_dist(x_loc, z_loc, dist.order = dist_order)
 est_data <- cbind(est_data, D)
 
 test_that("predict_ooi returns the same results as predict; formula = ~ x_ * z_ + x_ * d", {
   #prepare formula for estimation
-  formula <- prep_form(~ x_ * z_ + x_ * d, c(Xnames, Znames))
+  formula <- prep_form(~ x_ * z_ + x_ * d, c(Xnames, Znames), dist.order = dist_order)
   #estimate logit
   logit <- suppressWarnings(glm(as.formula(formula), family = binomial(link='logit'),
                data = est_data, weights = est_data$w))
@@ -47,7 +48,7 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_ * z_ 
     Xi <- matrix(rep(X[i,], n), ncol = m, byrow = T,
                  dimnames = list(NULL, Xnames))
     X_loc_i <- matrix(rep(X_loc[i,], n), nrow = n, byrow = T)
-    D <- calc_dist(X_loc_i, Z_loc)
+    D <- calc_dist(X_loc_i, Z_loc, dist.order = dist_order)
     df <- cbind.data.frame(Xi, Z, D)
     f <- t(as.matrix(predict(logit, newdata = df)))
     w <- w / sum(w)
@@ -58,7 +59,7 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_ * z_ 
 
 test_that("predict_ooi returns the same results as predict; formula = ~ x_*z_ + x_*d + d*z_", {
   #prepare formula for estimation
-  formula <- prep_form(~ x_*z_ + x_*d + d*z_, c(Xnames, Znames))
+  formula <- prep_form(~ x_*z_ + x_*d + d*z_, c(Xnames, Znames), dist.order = dist_order)
   #estimate logit
   logit <- suppressWarnings(glm(as.formula(formula), family = binomial(link='logit'),
                                 data = est_data, weights = est_data$w))
@@ -71,7 +72,7 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_*z_ + 
     Xi <- matrix(rep(X[i,], n), ncol = m, byrow = T,
                  dimnames = list(NULL, Xnames))
     X_loc_i <- matrix(rep(X_loc[i,], n), nrow = n, byrow = T)
-    D <- calc_dist(X_loc_i, Z_loc)
+    D <- calc_dist(X_loc_i, Z_loc, dist.order = dist_order)
     df <- cbind.data.frame(Xi, Z, D)
     f <- t(as.matrix(predict(logit, newdata = df)))
     w <- w / sum(w)
@@ -82,7 +83,7 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_*z_ + 
 
 test_that("predict_ooi returns the same results as predict; formula = ~ x_*z_ + d*z_", {
   #prepare formula for estimation
-  formula <- prep_form(~ x_*z_ + d*z_, c(Xnames, Znames))
+  formula <- prep_form(~ x_*z_ + d*z_, c(Xnames, Znames), dist.order = dist_order)
   #estimate logit
   logit <- suppressWarnings(glm(as.formula(formula), family = binomial(link='logit'),
                                 data = est_data, weights = est_data$w))
@@ -95,7 +96,7 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_*z_ + 
     Xi <- matrix(rep(X[i,], n), ncol = m, byrow = T,
                  dimnames = list(NULL, Xnames))
     X_loc_i <- matrix(rep(X_loc[i,], n), nrow = n, byrow = T)
-    D <- calc_dist(X_loc_i, Z_loc)
+    D <- calc_dist(X_loc_i, Z_loc, dist.order = dist_order)
     df <- cbind.data.frame(Xi, Z, D)
     f <- t(as.matrix(predict(logit, newdata = df)))
     w <- w / sum(w)
@@ -106,7 +107,7 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_*z_ + 
 
 test_that("predict_ooi returns the same results as predict; formula = ~ x_ * d", {
   #prepare formula for estimation
-  formula <- prep_form(~ x_ * d, c(Xnames, Znames))
+  formula <- prep_form(~ x_ * d, c(Xnames, Znames), dist.order = dist_order)
   #estimate logit
   logit <- suppressWarnings(glm(as.formula(formula), family = binomial(link='logit'),
                                 data = est_data, weights = est_data$w))
@@ -119,7 +120,7 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_ * d",
     Xi <- matrix(rep(X[i,], n), ncol = m, byrow = T,
                  dimnames = list(NULL, Xnames))
     X_loc_i <- matrix(rep(X_loc[i,], n), nrow = n, byrow = T)
-    D <- calc_dist(X_loc_i, Z_loc)
+    D <- calc_dist(X_loc_i, Z_loc, dist.order = dist_order)
     df <- cbind.data.frame(Xi, Z, D)
     f <- t(as.matrix(predict(logit, newdata = df)))
     w <- w / sum(w)
@@ -130,7 +131,7 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_ * d",
 
 test_that("predict_ooi returns the same results as predict; formula = ~ x_ + z_ + d_", {
   #prepare formula for estimation
-  formula <- prep_form(~ x_ + z_ + d, c(Xnames, Znames))
+  formula <- prep_form(~ x_ + z_ + d, c(Xnames, Znames), dist.order = dist_order)
   #estimate logit
   logit <- suppressWarnings(glm(as.formula(formula), family = binomial(link='logit'),
                                 data = est_data, weights = est_data$w))
@@ -143,7 +144,7 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_ + z_ 
     Xi <- matrix(rep(X[i,], n), ncol = m, byrow = T,
                  dimnames = list(NULL, Xnames))
     X_loc_i <- matrix(rep(X_loc[i,], n), nrow = n, byrow = T)
-    D <- calc_dist(X_loc_i, Z_loc)
+    D <- calc_dist(X_loc_i, Z_loc, dist.order = dist_order)
     df <- cbind.data.frame(Xi, Z, D)
     f <- t(as.matrix(predict(logit, newdata = df)))
     w <- w / sum(w)
@@ -154,7 +155,7 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_ + z_ 
 
 test_that("predict_ooi returns the same results as predict; formula = ~ z_ + d", {
   #prepare formula for estimation
-  formula <- prep_form(~ z_ + d, c(Xnames, Znames))
+  formula <- prep_form(~ z_ + d, c(Xnames, Znames), dist.order = dist_order)
   #estimate logit
   logit <- suppressWarnings(glm(as.formula(formula), family = binomial(link='logit'),
                                 data = est_data, weights = est_data$w))
@@ -167,7 +168,7 @@ test_that("predict_ooi returns the same results as predict; formula = ~ z_ + d",
     Xi <- matrix(rep(X[i,], n), ncol = m, byrow = T,
                  dimnames = list(NULL, Xnames))
     X_loc_i <- matrix(rep(X_loc[i,], n), nrow = n, byrow = T)
-    D <- calc_dist(X_loc_i, Z_loc)
+    D <- calc_dist(X_loc_i, Z_loc, dist.order = dist_order)
     df <- cbind.data.frame(Xi, Z, D)
     f <- t(as.matrix(predict(logit, newdata = df)))
     w <- w / sum(w)
@@ -178,7 +179,7 @@ test_that("predict_ooi returns the same results as predict; formula = ~ z_ + d",
 
 test_that("predict_ooi returns the same results as predict; formula = ~ x_ + d", {
   #prepare formula for estimation
-  formula <- prep_form(~ x_ + d, c(Xnames, Znames))
+  formula <- prep_form(~ x_ + d, c(Xnames, Znames), dist.order = dist_order)
   #estimate logit
   logit <- suppressWarnings(glm(as.formula(formula), family = binomial(link='logit'),
                                 data = est_data, weights = est_data$w))
@@ -191,7 +192,7 @@ test_that("predict_ooi returns the same results as predict; formula = ~ x_ + d",
     Xi <- matrix(rep(X[i,], n), ncol = m, byrow = T,
                  dimnames = list(NULL, Xnames))
     X_loc_i <- matrix(rep(X_loc[i,], n), nrow = n, byrow = T)
-    D <- calc_dist(X_loc_i, Z_loc)
+    D <- calc_dist(X_loc_i, Z_loc, dist.order = dist_order)
     df <- cbind.data.frame(Xi, Z, D)
     f <- t(as.matrix(predict(logit, newdata = df)))
     w <- w / sum(w)
