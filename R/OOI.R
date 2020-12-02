@@ -81,7 +81,6 @@ OOI <- function(formula = NULL,
     x_loc <- X.location[est_data$worker_id, , drop = F]
     z_loc <- Z.location[est_data$job_id, , drop = F]
     D <- calc_dist(x_loc, z_loc, dist.fun, dist.order)
-    print(summary(D[,1]))
     est_data <- cbind(est_data, D)
   }
   #estimate logit
