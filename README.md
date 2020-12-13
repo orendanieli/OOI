@@ -11,7 +11,7 @@ Currently, only the GitHub version is available through:
 
 ``` r
 #install.packages("devtools")
-devtools::install_github("eladg9/OOI")
+devtools::install_github("eladg9/OOI/r-package")
 ```
 
 Usage Example
