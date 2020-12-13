@@ -64,8 +64,10 @@ two_dim_function = function(x, z){
 calc_dist(X_loc[1:10,], Z_loc[1:10,], fun = two_dim_function, dist.order = c(2, 3))
 
 
-
-
+X = cbind(X, rnorm(n))
+colnames(X)[2] = "x.random"
+ooi_obj <- suppressWarnings(OOI(~ x_ * d + x.random*x.men, X = X, X.location = X_loc, Z.location = Z_loc,
+                                dist.fun = dis_function, dist.order = c(2,1), sim.factor = 1))
 
 
 

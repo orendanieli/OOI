@@ -171,7 +171,7 @@ predict_ooi <- function(coef.mat, X,
         Xi <- X[workers, ,drop = F]
         D <- gen_dist_mat(workers, X.location, Z.location, dist.fun, dist.order)
         A1_Z1i <- A1_Z1
-        for(p in 1:dist.order){
+        for(p in 1:sum(dist.order)){
           DpZ3 <- as.vector(D[,p]) * Z3
           A1_Z1i["cons",] <- A1_Z1i["cons", ] + DpZ3 %*% A3[p, ]
         }
@@ -202,7 +202,7 @@ predict_ooi <- function(coef.mat, X,
         Xi <- X1[workers,]
         D <- gen_dist_mat(workers, X.location, Z.location, dist.fun, dist.order)
         A1_Z1i <- A1_Z1
-        for(p in 1:dist.order){
+        for(p in 1:sum(dist.order)){
           DpZ3 <- as.vector(D[,p]) * Z3
           A1_Z1i["cons",] <- A1_Z1i["cons",] + DpZ3 %*% A3[p,]
         }

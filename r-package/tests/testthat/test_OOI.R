@@ -20,14 +20,15 @@ X <- matrix(men, ncol = 1, dimnames = list(NULL, "x.men"))
 #define simple distance function
 dis_function <- function(x, y){abs(x - y)}
 ooi_obj <- suppressWarnings(OOI(~ x_ * d, X = X, X.location = X_loc, Z.location = Z_loc,
-                                dist.fun = dis_function, dist.order = 1, sim.factor = 1))
+                                dist.fun = dis_function, dist.order = 1, sim.factor = 2))
+
+#choose workers who are far enough from the edges (for them p(z) = 1/n is reasonable)
+q25 <- quantile(X_loc[,1], probs = 0.3)
+q75 <- quantile(X_loc[,1], probs = 0.7)
+central <- (X_loc[,1] > q25) & (X_loc[,1] < q75)
 
 test_that("OOI returns correct output", {
   ooi <- ooi_obj$ooi
-  #choose workers who are far enough from the edges
-  q25 <- quantile(X_loc[,1], probs = 0.3)
-  q75 <- quantile(X_loc[,1], probs = 0.7)
-  central <- (X_loc[,1] > q25) & (X_loc[,1] < q75)
   ooi_men <- ooi[men_inc & central]
   ooi_women <- ooi[!men_inc & central]
   #theoretical results
@@ -40,57 +41,30 @@ test_that("OOI returns correct output", {
 })
 
 test_that("OOI returns the right job_worker probabilities", {
-  p_hat <- ooi_obj$job_worker_prob
-  p_theo <- 0.5 * men_rate * exp(-dist * men_rate) #men
-  p_theo[!men_inc] <- 0.5 * women_rate * exp(-dist[!men_inc] * women_rate) #women
-  diff <- abs(p_hat - p_theo)
-  print(summary(diff))
-  expect_true(max(diff) < 0.1)
+  logp_hat <- ooi_obj$job_worker_prob
+  logp <- log(0.5 * men_rate * exp(-dist * men_rate)) #men
+  logp[!men_inc] <- log(0.5 * women_rate * exp(-dist[!men_inc] * women_rate)) #women
+  p <- exp(logp)
+  wgt <- 1/n
+  p <- p * wgt
+  sum_over_p <- sum(p)
+  #normalize p to sum to 1
+  logp <- logp - log(sum_over_p)
+  diff <- abs(logp_hat - logp)
+  expect_true(mean(diff) < 0.1)
 })
-
-test_that("OOI returns the same results for matrices and data frames with factors", {
-  #simulate data (matrices and data frames)
-  n <- 50
-  men <-rbinom(n, 1, 0.5)
-  native <- rbinom(n, 1, 0.5)
-  size <- rbinom(n, 3, 0.5)
-  wage <- rnorm(n, 100, 10)
-  X_df <- data.frame(x.men = factor(men, c(0,1), c("yes", "no")),
-                  x.native = factor(native, c(0,1), c("yes", "no")))
-  X_mat <- as.matrix(cbind(men, native))
-  X_mat <- add_prefix(X_mat, "x.")
-  Z_df <- data.frame(z.size = factor(size, c(0,1,2,3), c("A", "B", "C", "D")),
-                     z.wage = wage)
-  Z_mat <- cbind(wage, A = 1*(size == 1), B = 1*(size == 0),
-                 C = 1*(size == 3))
-  Z_mat <- add_prefix(Z_mat, "z.")
-  X_loc <- matrix(runif(2*n, 40, 42), ncol = 2)
-  Z_loc <- matrix(runif(2*n, 40, 42), ncol = 2)
-  #compare results:
-  mat_results <- suppressWarnings(OOI(~  x_*z_ + z_*d + x_*d, X = X_mat,
-                                      Z = Z_mat, X_loc, Z_loc, sim.factor = 3,
-                                      seed = 2))
-  df_results <- suppressWarnings(OOI(~  x_*z_ + z_*d + x_*d, X = X_df,
-                                      Z = Z_df, X_loc, Z_loc, sim.factor = 3,
-                                     seed = 2))
-  expect_true(max(abs(mat_results$ooi - df_results$ooi)) < 0.01)
-})
-
 
 test_that("OOI returns correct output for multi-dimensional distance", {
+  set.seed(1312)
   #add another distance dimension - city. workers and jobs are always in
   #the same city
   city <- rbinom(n, 1, 0.5)
   X_loc <- cbind(X_loc, city); Z_loc <- cbind(Z_loc, city)
   dis_function <- function(x, y){c(abs(x[1] - y[1]), 1*(x[2] != y[2]))}
-  ooi_obj <- suppressWarnings(OOI(~ x_ * d, X = X, X.location = X_loc, Z.location = Z_loc,
+  ooi_obj <- suppressWarnings(OOI(~ x_ * d , X = X, X.location = X_loc, Z.location = Z_loc,
                                   dist.fun = dis_function, dist.order = c(1,1), sim.factor = 1))
 
   ooi <- ooi_obj$ooi
-  #choose workers who are far enough from the edges
-  q25 <- quantile(X_loc[,1], probs = 0.3)
-  q75 <- quantile(X_loc[,1], probs = 0.7)
-  central <- (X_loc[,1] > q25) & (X_loc[,1] < q75)
   ooi_men <- ooi[men_inc & central]
   ooi_women <- ooi[!men_inc & central]
   #theoretical results
@@ -115,7 +89,7 @@ test_that("OOI returns correct output for multi-dimensional distance", {
 #
 # #currently this test doesnt pass
 # test_that("OOI returns correct output for multi-dimensional distance", {
-#   n <- 10000
+#   n <- 1000
 #   men_rate <- 2
 #   women_rate <- 4
 #   men <- rbinom(n, 1, 0.5)
@@ -127,10 +101,10 @@ test_that("OOI returns correct output for multi-dimensional distance", {
 #   dist[!men_inc] <- rexp(n = sum(!men_inc), rate = women_rate) #distance for women
 #   angle <- 2*pi*runif(n)
 #   Z_loc <- X_loc + cbind(dist*cos(angle), dist*sin(angle))
-#   dis_function <- function(x, z){sqrt((x[1] - z[1])^2 + (x[2] - z[2])^2)}
+#   dis_function <- function(x, z){c(abs(x[1] - z[1]), abs(x[2] - z[2]))}
 #   X <- matrix(men, ncol = 1, dimnames = list(NULL, "x.men"))
 #   ooi_obj <- suppressWarnings(OOI(~ x_ * d, X = X, X.location = X_loc, Z.location = Z_loc,
-#                                   dist.fun = dis_function, dist.order = 1, sim.factor = 3))
+#                                   dist.fun = dis_function, dist.order = c(2,2), sim.factor = 3))
 #   ooi <- ooi_obj$ooi
 #   #choose workers who are close enough to th center
 #   central <- apply(abs(X_loc) < 0.5, 1, all)
@@ -144,3 +118,32 @@ test_that("OOI returns correct output for multi-dimensional distance", {
 #   expect_true(abs(ooi_men_hat - theo_ooi_men) < 0.1 &
 #                 abs(ooi_women_hat - theo_ooi_women) < 0.1)
 # })
+
+
+test_that("OOI returns the same results for matrices and data frames with factors", {
+  #simulate data (matrices and data frames)
+  n <- 50
+  men <-rbinom(n, 1, 0.5)
+  native <- rbinom(n, 1, 0.5)
+  size <- rbinom(n, 3, 0.5)
+  wage <- rnorm(n, 100, 10)
+  X_df <- data.frame(x.men = factor(men, c(0,1), c("yes", "no")),
+                     x.native = factor(native, c(0,1), c("yes", "no")))
+  X_mat <- as.matrix(cbind(men, native))
+  X_mat <- add_prefix(X_mat, "x.")
+  Z_df <- data.frame(z.size = factor(size, c(0,1,2,3), c("A", "B", "C", "D")),
+                     z.wage = wage)
+  Z_mat <- cbind(wage, A = 1*(size == 1), B = 1*(size == 0),
+                 C = 1*(size == 3))
+  Z_mat <- add_prefix(Z_mat, "z.")
+  X_loc <- matrix(runif(2*n, 40, 42), ncol = 2)
+  Z_loc <- matrix(runif(2*n, 40, 42), ncol = 2)
+  #compare results:
+  mat_results <- suppressWarnings(OOI(~  x_*z_ + z_*d + x_*d, X = X_mat,
+                                      Z = Z_mat, X_loc, Z_loc, sim.factor = 3,
+                                      seed = 2))
+  df_results <- suppressWarnings(OOI(~  x_*z_ + z_*d + x_*d, X = X_df,
+                                     Z = Z_df, X_loc, Z_loc, sim.factor = 3,
+                                     seed = 2))
+  expect_true(max(abs(mat_results$ooi - df_results$ooi)) < 0.01)
+})

@@ -43,6 +43,8 @@ calc_dist <- function(X.location, Z.location, fun = geo_dist, dist.order){
       }
     }
   }
+  #Arrange columns in alphabetical order (e.g., d11 d12 d21)
+  distance = distance[, colnames(distance)[order(colnames (distance))] , drop = F]
   return(distance)
 }
 
@@ -191,7 +193,7 @@ cbind_null <- function(df1, df2){
   }
 }
 
-#extract the probability of each worker to work at his job from the estimated logit model
+#extract the log probability of each worker to work at his specific job from the estimated logit model
 #logit - a logit model (object)
 #indices - indices of the original data (and not the simulated). logical
 get_probs <- function(logit, indices, wgt){
@@ -200,7 +202,7 @@ get_probs <- function(logit, indices, wgt){
   p <- exp(logp)
   p <- p * wgt
   sum_over_p <- sum(p)
-  #normalize p to sum to 1
+  #normalize p to averaged to 1
   logp <- logp - log(sum_over_p)
   return(logp)
 }

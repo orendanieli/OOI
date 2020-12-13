@@ -13,27 +13,29 @@
 #'          should start with "x" (necessary for \code{\link{coef_reshape}}).
 #' @param Z an optional matrix or data frame with jobs characteristics. Note that all column names
 #'          should start with "z" (necessary for \code{\link{coef_reshape}}).
-#' @param X.location an optional matrix or data frame with location for workers. could be
+#' @param X.location an optional matrix or data frame with location for workers. Could be
 #'                   geographical location (i.e., geo-coordinates) or any other
 #'                   feature that can be used in order to measure distance between
-#'                   worker and job using 'dist.fun'.
+#'                   worker and job using 'dist.fun'. Currently the package supports only numeric
+#'                   inputs.
 #' @param Z.location same as 'X.location' but for jobs.
 #' @param wgt an optional numeric vector of weights.
 #' @param pred logical. If TRUE (default), predicts the ooi for the provided data.
-#' @param method a method for estimating P(Z|X) / P(Z). currently not in use.
+#' @param method a method for estimating P(Z|X) / P(Z). Currently not in use.
 #' @param sim.factor a variable that determines how much fake data to simulate
 #'                   (relative to real data).
 #' @param dist.fun a distance function to calculate the distance between X.location and
 #'                 Z.location. Users interested in using more than one distance metric
 #'                 should provide a function that returns for each row of X.location and
-#'                 Z.location a vector with all the necessary metrics.
-#'                 The default function is \code{\link{geo_dist}}, which suitable
+#'                 Z.location a vector with all the necessary metrics. Also - the function
+#'                 should use columns by their index and not by their names.
+#'                 The default function is \code{\link{geo_dist}}, which is suitable
 #'                 for data with geo-coordinates.
 #' @param dist.order a numeric vector specifying for each distance metric
 #'                   an order of the distance polynomial.
 #' @param seed the seed of the random number generator.
 #'
-#' @return an object of class "ooi". This object is a list containing
+#' @return An "ooi" object. This object is a list containing
 #' the following components:
 #'  \item{coeffs}{coefficients from the estimated logit.}
 #'  \item{coeffs_sd}{coefficients SE.}
@@ -41,10 +43,36 @@
 #'  \item{standardized_coeffs}{standardized coefficients.}
 #'  \item{ooi}{the Outside Option Index.}
 #'  \item{hhi}{the Herfindahl-Hirschman Index, an alternative measure for outside options.}
-#'  \item{job_worker_prob}{probabilities of each worker to work at his job}
+#'  \item{job_worker_prob}{the log probability of each worker to work at his *specific* job (rahter than
+#'                         to work at a job with his specific z)}
 #'  \item{orig_arg}{a list containing the original arguments (necessary
 #'  for \code{\link{predict.ooi}}).}
-
+#'
+#' @examples
+#' library(OOI)
+#' #generate data
+#' #worker and job characteristics:
+#' n <- 1000
+#' men <- rbinom(n, 1, 0.5)
+#' size <- 1 + rgeom(n, 0.1)
+#' size[men == 0] <- size[men == 0] + 2
+#' worker_resid <- matrix(round(runif(n, 0, 20), 1), ncol = 1)
+#' job_location <- matrix(round(runif(n, 20, 40), 1), ncol = 1)
+#' #prepare data
+#' #define distance function:
+#' dist_metric <- function(x, y){abs(y - x)}
+#' X <- data.frame(men = men)
+#' Z <- data.frame(size = size)
+#' #add "x" / "z" to column names:
+#' X <- add_prefix(X, "x.")
+#' Z <- add_prefix(Z, "z.")
+#' #estimate P(Z|X) / P(Z) and calculate the ooi:
+#' ooi_object <- OOI(formula = ~ x_*z_ + x_*d + z_*d, X = X, Z = Z,
+#'                   X.location = worker_resid, Z.location = job_location,
+#'                   sim.factor = 3, dist.fun = dist_metric, dist.order = 3)
+#' #we can extract the ooi using predict():
+#' ooi <- predict(ooi_object)
+#' summary(ooi)
 #' @export
 
 OOI <- function(formula = NULL,
@@ -76,7 +104,7 @@ OOI <- function(formula = NULL,
       #rounding is necessary for gen_dist()
       X.location = round(X.location, 3)
     }
-    X.location <- as.matrix(X.location)
+    X.location <- as.matrix(X.location) #In later versions, this need to be moved to the perdict function
     Z.location <- as.matrix(Z.location)
     x_loc <- X.location[est_data$worker_id, , drop = F]
     z_loc <- Z.location[est_data$job_id, , drop = F]
@@ -133,7 +161,7 @@ OOI <- function(formula = NULL,
 #' and/or new data.
 #'
 #' @param object an ooi object.
-#' @param new.coef a new *named* vector of coefficients. check the coefficients produced by
+#' @param new.coef a new *named* vector of coefficients. Check the coefficients produced by
 #'                 the main function to see the right format for this vector.
 #' @param new.X a new X matrix / data frame.
 #' @param new.Z a new Z matrix / data frame.
@@ -143,12 +171,45 @@ OOI <- function(formula = NULL,
 #' @param hhi whether to predict the HHI (Herfindahl-Hirschman Index, an alternative measure for
 #'            outside options) instead of the OOI. default is FALSE.
 #' @param both whether to return a list with both HHI and OOI when suppling new inputs (default is FALSE).
-#'             necessary especially when predicting takes a lot of time.
+#'             Necessary especially when predicting takes a lot of time.
 #'
-#' @return if there are no new arguments, returns the original results (ooi/hhi). otherwise,
+#' @return If there are no new arguments, returns the original results (ooi/hhi). Otherwise,
 #'         returns a vector of ooi/hhi (or a list of both) calculated using the new arguments.
+#' @examples
+#' library(OOI)
+#' #generate data
+#' #worker and job characteristics:
+#' n <- 1000
+#' men <- rbinom(n, 1, 0.5)
+#' size <- 1 + rgeom(n, 0.1)
+#' size[men == 0] <- size[men == 0] + 2
+#' worker_resid <- matrix(round(runif(n, 0, 20), 1), ncol = 1)
+#' job_location <- matrix(round(runif(n, 20, 40), 1), ncol = 1)
+#' #prepare data
+#' #define distance function:
+#' dist_metric <- function(x, y){abs(y - x)}
+#' X <- data.frame(men = men)
+#' Z <- data.frame(size = size)
+#' #add "x" / "z" to column names:
+#' X <- add_prefix(X, "x.")
+#' Z <- add_prefix(Z, "z.")
+#' #estimate P(Z|X) / P(Z) and calculate the ooi:
+#' ooi_object <- OOI(formula = ~ x_*z_ + x_*d + z_*d, X = X, Z = Z,
+#'                   X.location = worker_resid, Z.location = job_location,
+#'                   sim.factor = 3, dist.fun = dist_metric, dist.order = 3)
+#' #we can extract the ooi using predict():
+#' ooi <- predict(ooi_object)
+#' #or the hhi:
+#' ooi <- predict(ooi_object, hhi = T)
+#' #we can also estimate the ooi with different coefficients:
+#' coeffs <- ooi_object$coeffs
+#' coeffs[names(coeffs) == "x.men"] <- 0
+#' new_ooi <- predict(ooi_object, new.coef = coeffs)
+#' #or new data:
+#' Z2 <- data.frame(z.size = 1 + rgeom(n, 0.1))
+#' new_ooi <- predict(ooi_object, new.Z = Z2)
 #' @export
-#add example
+
 predict.ooi <- function(object,
                         new.coef = NULL,
                         new.X = NULL,
@@ -175,7 +236,7 @@ predict.ooi <- function(object,
     #reshape coefficients (necessary for prediction)
     coef_matrices <- coef_reshape(coeffs)
     #predict OOI
-    validate_input(X, Z, X.location, Z.location, wgt)
+    validate_input(X, Z, X.location, Z.location, wgt, allow.dif.rows = T)
     tmp <- predict_ooi(coef_matrices, X, Z, X.location, Z.location,
                        wgt, x$dist.fun, x$dist.order)
     if(both){
@@ -188,12 +249,15 @@ predict.ooi <- function(object,
 
 #' Add prefix
 #'
-#' Adds a prefix to the column names of a matrix
+#' Adds a prefix to the column names of a matrix / data.frame.
 #'
-#' @param df data.frame or matrix
-#' @param prefix a prefix to be added
+#' @param df a data.frame or a matrix.
+#' @param prefix a prefix to be added.
 #'
-#' @return matrix / data.frame with new column names.
+#' @return a matrix / data.frame with new column names.
+#' @examples
+#' X = matrix(rnorm(100), ncol =2)
+#' X = add_prefix(X, "x_")
 #' @export
 add_prefix <- function(df, prefix){
   col_names <- colnames(df)

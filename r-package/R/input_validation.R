@@ -1,4 +1,5 @@
-validate_input <- function(X, Z, X.location, Z.location, wgt){
+validate_input <- function(X, Z, X.location, Z.location, wgt,
+                           allow.dif.rows = F){ #do we allow for different rows in X & Z?
   if(is.null(Z) & is.null(X.location) & is.null(Z.location)){
     stop("Z or locations are needed")
   }
@@ -9,12 +10,12 @@ validate_input <- function(X, Z, X.location, Z.location, wgt){
   if(any(is.na(X)))
     stop("X contains NA values, which aren't allowed")
   n <- nrow(X)
-  validate_type(Z, "Z", n)
-  validate_type(Z.location, "Z.location", n)
-  validate_type(X.location, "X.location", n)
+  validate_type(Z, "Z", n, allow.dif.rows)
+  validate_type(Z.location, "Z.location", n, allow.dif.rows)
+  validate_type(X.location, "X.location", n, allow.dif.rows)
   validate_colnames(X, "x")
   validate_colnames(Z, "z")
-  if(!inherits(wgt, "numeric") | n != length(wgt) | any(is.na(wgt))){
+  if((!inherits(wgt, "numeric") | n != length(wgt) | any(is.na(wgt))) & !allow.dif.rows){
     stop(paste("wgt must be numeric,",
                "with the same number of examples as X.",
                "missing values aren't allowed"))
@@ -62,13 +63,13 @@ validate_colnames <- function(df, char){
   }
 }
 
-validate_type <- function(df, df.name, exp.length){
+validate_type <- function(df, df.name, exp.length, allow.dif.rows){
   if(!is.null(df)){
     #files read by read_dta sometimes have strange class
     if(!inherits(df, c("matrix","data.frame")) | length(class(df)) > 1){
       stop(paste(df.name, "should be either matrix or data.frame"))
     }
-    if(nrow(df) != exp.length){
+    if((nrow(df) != exp.length) & !allow.dif.rows){
       stop(paste("X and", df.name, "don't have the same number of rows"))
     }
     if(any(is.na(df))){
