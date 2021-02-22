@@ -3,7 +3,6 @@ OOI: Outside Option Index
 =========================
 
 [![CRAN status](https://www.r-pkg.org/badges/version/OOI)](https://cran.r-project.org/package=OOI)
-[![metacran downloads](https://cranlogs.r-pkg.org/badges/OOI)](https://cran.r-project.org/package=OOI)
 
 An R package that calculates the Outside Option Index proposed by Caldwell and Danieli (2018). This index uses the cross- sectional concentration of similar workers across job types to quantify the availability of outside options as a function of workers’ characteristics (e.g. commuting costs, preferences, and skills.)
 
