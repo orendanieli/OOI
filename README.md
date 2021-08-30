@@ -17,7 +17,7 @@ install.packages("OOI")
 Or the development version from GitHub:
 ``` r
 #install.packages("devtools")
-devtools::install_github("eladg9/OOI/r-package")
+devtools::install_github("orendanieli/OOI/r-package")
 ```
 
 Usage Example
